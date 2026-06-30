@@ -1,0 +1,176 @@
+export type Quarter = 1 | 2 | 3 | 4;
+
+export type MetricId =
+  | "cash"
+  | "runway"
+  | "arr"
+  | "mrr"
+  | "pmf"
+  | "modelPower"
+  | "productQuality"
+  | "computeSupply"
+  | "computeCost"
+  | "grossMargin"
+  | "techDebt"
+  | "reputation"
+  | "morale"
+  | "complianceRisk"
+  | "globalReadiness"
+  | "boardPressure"
+  | "founderHealth"
+  | "founderEquity"
+  | "valuation"
+  | "marketHeat";
+
+export type CompanyMetrics = Record<MetricId, number>;
+
+export type FounderAttributeId =
+  | "tech"
+  | "sales"
+  | "fundraising"
+  | "management"
+  | "ethics"
+  | "stamina"
+  | "hype"
+  | "luck";
+
+export type FounderAttributes = Record<FounderAttributeId, number>;
+
+export type BackgroundId =
+  | "ex-bigtech-pm"
+  | "former-llm-researcher"
+  | "serial-founder"
+  | "overseas-phd"
+  | "open-source-maintainer"
+  | "failed-incubation-team"
+  | "rich-kid-founder"
+  | "indie-hacker";
+
+export type TrackId =
+  | "foundation-model"
+  | "ai-agent"
+  | "ai-coding"
+  | "enterprise-knowledge"
+  | "ai-education"
+  | "ai-companion"
+  | "ai-hardware"
+  | "ai-security"
+  | "medical-ai"
+  | "finance-ai"
+  | "manufacturing-ai"
+  | "local-life-agent";
+
+export type MarketId = "china" | "sea" | "middle-east" | "europe" | "us";
+
+export type FactionId =
+  | "deepduck"
+  | "openmind"
+  | "moralmachine"
+  | "green-furnace"
+  | "cloudsoft"
+  | "byteplanet"
+  | "tencentacle"
+  | "alicloud-temple";
+
+export type InvestorId =
+  | "alice-chen"
+  | "old-zhou"
+  | "maya-cloud"
+  | "victor-furnace"
+  | "omar-oasis"
+  | "ms-lin"
+  | "kevin-founder"
+  | "grace-ma"
+  | "leo-banker"
+  | "nora-open"
+  | "byteplanet-capital"
+  | "hard-term-capital";
+
+export type EmployeeRoleId =
+  | "researcher"
+  | "engineer"
+  | "product-manager"
+  | "sales"
+  | "compliance"
+  | "finance"
+  | "cfo"
+  | "overseas-bd";
+
+export type ActionId =
+  | "build-product"
+  | "train-model"
+  | "sell"
+  | "fundraise"
+  | "hire"
+  | "retain"
+  | "govern-compliance"
+  | "expand-global"
+  | "pr-launch"
+  | "cut-costs";
+
+export type AchievementId = string;
+export type EndingId = string;
+export type EventId = string;
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: EmployeeRoleId;
+  level: "junior" | "mid" | "senior" | "lead" | "cxo";
+  ability: number;
+  salary: number;
+  options: number;
+  loyalty: number;
+  ambition: number;
+  fatigue: number;
+  scarcity: number;
+  tags: string[];
+}
+
+export interface FounderProfile {
+  name: string;
+  backgroundId: BackgroundId;
+  trackId: TrackId;
+  attributes: FounderAttributes;
+}
+
+export interface MarketState {
+  id: MarketId;
+  unlocked: boolean;
+  revenueShare: number;
+  localization: number;
+}
+
+export interface GameState {
+  seed: number;
+  year: number;
+  quarter: Quarter;
+  founder: FounderProfile;
+  metrics: CompanyMetrics;
+  employees: Employee[];
+  markets: Record<MarketId, MarketState>;
+  investorRelations: Record<InvestorId, number>;
+  factionRelations: Record<FactionId, number>;
+  completedAchievements: AchievementId[];
+  endingId: EndingId | null;
+  log: string[];
+}
+
+export interface NewGameInput {
+  seed: number;
+  founderName: string;
+  backgroundId: BackgroundId;
+  trackId: TrackId;
+  attributes: FounderAttributes;
+}
+
+export interface MetricEffect {
+  metric: MetricId;
+  delta: number;
+}
+
+export interface Condition {
+  metric: MetricId;
+  op: ">=" | ">" | "<=" | "<" | "===";
+  value: number;
+}

@@ -1,0 +1,63 @@
+import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS } from "../constants";
+import type { CompanyMetrics, GameState, MarketState, NewGameInput } from "../types";
+
+function createInitialMetrics(): CompanyMetrics {
+  return {
+    cash: 3_000_000,
+    runway: 12,
+    arr: 0,
+    mrr: 0,
+    pmf: 25,
+    modelPower: 25,
+    productQuality: 25,
+    computeSupply: 35,
+    computeCost: 20,
+    grossMargin: 35,
+    techDebt: 15,
+    reputation: 30,
+    morale: 60,
+    complianceRisk: 20,
+    globalReadiness: 10,
+    boardPressure: 0,
+    founderHealth: 85,
+    founderEquity: 100,
+    valuation: 10_000_000,
+    marketHeat: 55,
+  };
+}
+
+function createMarkets(): Record<string, MarketState> {
+  return Object.fromEntries(
+    MARKET_IDS.map((id) => [
+      id,
+      {
+        id,
+        unlocked: id === "china",
+        revenueShare: id === "china" ? 100 : 0,
+        localization: id === "china" ? 100 : 0,
+      },
+    ]),
+  );
+}
+
+export function createNewGame(input: NewGameInput): GameState {
+  return {
+    seed: input.seed,
+    year: 2026,
+    quarter: 1,
+    founder: {
+      name: input.founderName,
+      backgroundId: input.backgroundId,
+      trackId: input.trackId,
+      attributes: input.attributes,
+    },
+    metrics: createInitialMetrics(),
+    employees: [],
+    markets: createMarkets() as GameState["markets"],
+    investorRelations: Object.fromEntries(INVESTOR_IDS.map((id) => [id, 0])) as GameState["investorRelations"],
+    factionRelations: Object.fromEntries(FACTION_IDS.map((id) => [id, 0])) as GameState["factionRelations"],
+    completedAchievements: [],
+    endingId: null,
+    log: [`${input.founderName}创办了公司，投资人说这个方向“空间很大”。`],
+  };
+}
