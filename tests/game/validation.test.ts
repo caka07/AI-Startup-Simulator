@@ -42,6 +42,10 @@ describe("content validation", () => {
     expect(result.errors).toEqual([]);
   });
 
+  it("accepts the current content tables through the pure validator", () => {
+    expect(validateContentTables(contentTables()).valid).toBe(true);
+  });
+
   it("keeps endings ordered from most forced to most optional", () => {
     const priorities = endings.map((ending) => ending.priority);
     const sorted = [...priorities].sort((a, b) => a - b);
@@ -116,6 +120,36 @@ describe("content validation", () => {
     const result = validateContentTables(tables);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("events/investor-moat-question has missing or invalid choices");
+  });
+
+  it("rejects missing employee role strengths without throwing", () => {
+    const tables = contentTables();
+    delete (tables.employeeRoles[0] as Partial<EmployeeRole>).strengths;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("employeeRoles/researcher has missing or invalid strengths");
+  });
+
+  it("rejects missing action effects without throwing", () => {
+    const tables = contentTables();
+    delete (tables.actions[0] as Partial<PlayerAction>).effects;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("actions/build-product has missing or invalid effects");
+  });
+
+  it("rejects missing event choice effects without throwing", () => {
+    const tables = contentTables();
+    delete (tables.events[0].choices[0] as Partial<GameEvent["choices"][number]>).effects;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question/show-enterprise-workflows has missing or invalid effects");
   });
 
   it("rejects duplicate choice ids and non-finite numbers", () => {

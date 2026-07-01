@@ -159,6 +159,14 @@ function validateEffect(owner: string, effect: MetricEffect, errors: string[]) {
   }
 }
 
+function validateEffectList(owner: string, label: string, effects: unknown, errors: string[]) {
+  if (!Array.isArray(effects)) {
+    errors.push(`${owner} has missing or invalid ${label}`);
+    return;
+  }
+  effects.forEach((effect) => validateEffect(owner, effect, errors));
+}
+
 function validateTriggeredContent(owner: string, items: Array<GameEvent | Achievement | Ending>, errors: string[]) {
   for (const item of items) {
     if (!Array.isArray(item.trigger)) {
@@ -265,10 +273,10 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
   );
 
   for (const role of tables.employeeRoles) {
-    role.strengths.forEach((effect) => validateEffect(`employeeRoles/${role.id}`, effect, errors));
+    validateEffectList(`employeeRoles/${role.id}`, "strengths", role.strengths, errors);
   }
   for (const action of tables.actions) {
-    action.effects.forEach((effect) => validateEffect(`actions/${action.id}`, effect, errors));
+    validateEffectList(`actions/${action.id}`, "effects", action.effects, errors);
   }
 
   validateTriggeredContent("events", tables.events, errors);
@@ -287,7 +295,7 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
     for (const choice of event.choices) {
       if (choiceIds.has(choice.id)) errors.push(`events/${event.id} has duplicate choice id: ${choice.id}`);
       choiceIds.add(choice.id);
-      choice.effects.forEach((effect) => validateEffect(`events/${event.id}/${choice.id}`, effect, errors));
+      validateEffectList(`events/${event.id}/${choice.id}`, "effects", choice.effects, errors);
     }
   }
 
