@@ -88,6 +88,30 @@ describe("finance", () => {
     expect(risky.termStyle).toBe("pressure");
   });
 
+  it("keeps the valuation floor after runway and compliance discounts", () => {
+    const evaluation = evaluateFundraising({
+      ...baseGame(),
+      metrics: { ...baseGame().metrics, arr: 0, runway: 2, complianceRisk: 70 },
+    });
+
+    expect(evaluation.valuation).toBe(10_000_000);
+  });
+
+  it("raises cash only for actual dilution when founder equity is low", () => {
+    const game = {
+      ...baseGame(),
+      metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 10, founderEquity: 5 },
+    };
+    const evaluation = evaluateFundraising(game);
+
+    const next = executeFundraise(game);
+
+    expect(evaluation.dilution).toBe(15);
+    expect(next.metrics.cash).toBe(game.metrics.cash + Math.round(evaluation.valuation * 0.05));
+    expect(next.metrics.founderEquity).toBe(0);
+    expect(next.log.at(-1)).toContain("稀释 5%");
+  });
+
   it("appends a funding log and updates valuation and runway without mutating the original game", () => {
     const game = {
       ...baseGame(),

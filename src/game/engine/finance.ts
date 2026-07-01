@@ -22,6 +22,10 @@ export interface FundraisingEvaluation {
   dilution: number;
 }
 
+function clampScore(value: number): number {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
 function availableRounds(game: GameState): FundingRound[] {
   const { arr, pmf, grossMargin } = game.metrics;
   const rounds: FundingRound[] = ["angel"];
@@ -47,14 +51,13 @@ export function evaluateFundraising(game: GameState): FundraisingEvaluation {
   const rounds = availableRounds(game);
   const growthStory = game.metrics.pmf + game.metrics.reputation + game.metrics.marketHeat;
   const riskPenalty = game.metrics.complianceRisk + Math.max(0, 6 - game.metrics.runway) * 8;
-  const score = clampMetric("reputation", game.founder.attributes.fundraising * 6 + growthStory / 2 - riskPenalty / 2);
+  const score = clampScore(game.founder.attributes.fundraising * 6 + growthStory / 2 - riskPenalty / 2);
   const revenueMultiple = game.metrics.grossMargin >= 55 ? 12 : game.metrics.grossMargin >= 35 ? 8 : 4;
   const technologyPremium = game.metrics.modelPower >= 75 ? 80_000_000 : game.metrics.modelPower >= 55 ? 30_000_000 : 0;
   const runwayDiscount = game.metrics.runway < 6 ? 0.75 : 1;
   const complianceDiscount = game.metrics.complianceRisk > 60 ? 0.8 : 1;
-  const valuation = Math.round(
-    Math.max(10_000_000, game.metrics.arr * revenueMultiple + technologyPremium) * runwayDiscount * complianceDiscount,
-  );
+  const discountedValuation = Math.round((game.metrics.arr * revenueMultiple + technologyPremium) * runwayDiscount * complianceDiscount);
+  const valuation = Math.max(10_000_000, discountedValuation);
   const style = termStyle(game);
   const dilution = style === "friendly" ? 10 : style === "normal" ? 15 : style === "pressure" ? 22 : 35;
   const suggestedAmount = Math.round(valuation * (dilution / 100));
@@ -71,11 +74,13 @@ export function evaluateFundraising(game: GameState): FundraisingEvaluation {
 
 export function executeFundraise(game: GameState): GameState {
   const evaluation = evaluateFundraising(game);
+  const actualDilution = Math.min(evaluation.dilution, game.metrics.founderEquity);
+  const cashRaised = Math.round(evaluation.valuation * (actualDilution / 100));
   const metrics = applyMetricDelta(
     applyMetricDelta(
-      applyMetricDelta(game.metrics, "cash", evaluation.suggestedAmount),
+      applyMetricDelta(game.metrics, "cash", cashRaised),
       "founderEquity",
-      -evaluation.dilution,
+      -actualDilution,
     ),
     "boardPressure",
     evaluation.termStyle === "friendly" ? 5 : evaluation.termStyle === "normal" ? 10 : 18,
@@ -90,7 +95,7 @@ export function executeFundraise(game: GameState): GameState {
     },
     log: [
       ...game.log,
-      `完成融资：估值 ${Math.round(evaluation.valuation / 10_000)} 万，稀释 ${evaluation.dilution}%。`,
+      `完成融资：估值 ${Math.round(evaluation.valuation / 10_000)} 万，稀释 ${actualDilution}%。`,
     ],
   };
 }
