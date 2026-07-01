@@ -21,8 +21,24 @@ describe("createNewGame", () => {
       },
     });
 
+    expect(game.seed).toBe(42);
     expect(game.year).toBe(2026);
     expect(game.quarter).toBe(1);
+    expect(game.founder).toEqual({
+      name: "沈一",
+      backgroundId: "ex-bigtech-pm",
+      trackId: "ai-agent",
+      attributes: {
+        tech: 4,
+        sales: 7,
+        fundraising: 6,
+        management: 4,
+        ethics: 4,
+        stamina: 5,
+        hype: 7,
+        luck: 3,
+      },
+    });
     expect(game.metrics).toEqual({
       cash: 3_000_000,
       runway: 12,
