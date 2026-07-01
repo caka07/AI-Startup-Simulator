@@ -36,7 +36,7 @@ describe("content validation", () => {
     expect(endings).toHaveLength(12);
   });
 
-  it("rejects content that references unknown metrics or ids", () => {
+  it("accepts shipped content without validation errors", () => {
     const result = validateContent();
     expect(result.valid).toBe(true);
     expect(result.errors).toEqual([]);
