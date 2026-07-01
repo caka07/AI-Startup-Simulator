@@ -76,6 +76,8 @@ export function executeFundraise(game: GameState): GameState {
   const evaluation = evaluateFundraising(game);
   const actualDilution = Math.min(evaluation.dilution, game.metrics.founderEquity);
   const cashRaised = Math.round(evaluation.valuation * (actualDilution / 100));
+  const raiseFraction = evaluation.dilution > 0 ? actualDilution / evaluation.dilution : 0;
+  const runwayIncrease = Math.round(12 * raiseFraction);
   const metrics = applyMetricDelta(
     applyMetricDelta(
       applyMetricDelta(game.metrics, "cash", cashRaised),
@@ -91,7 +93,7 @@ export function executeFundraise(game: GameState): GameState {
     metrics: {
       ...metrics,
       valuation: evaluation.valuation,
-      runway: clampMetric("runway", metrics.runway + 12),
+      runway: clampMetric("runway", metrics.runway + runwayIncrease),
     },
     log: [
       ...game.log,

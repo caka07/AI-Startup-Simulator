@@ -97,19 +97,36 @@ describe("finance", () => {
     expect(evaluation.valuation).toBe(10_000_000);
   });
 
-  it("raises cash only for actual dilution when founder equity is low", () => {
+  it("raises cash and runway only for actual dilution when founder equity is low", () => {
     const game = {
       ...baseGame(),
       metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 10, founderEquity: 5 },
     };
     const evaluation = evaluateFundraising(game);
+    const expectedRunwayIncrease = Math.round(12 * (5 / evaluation.dilution));
 
     const next = executeFundraise(game);
 
     expect(evaluation.dilution).toBe(15);
     expect(next.metrics.cash).toBe(game.metrics.cash + Math.round(evaluation.valuation * 0.05));
     expect(next.metrics.founderEquity).toBe(0);
+    expect(next.metrics.runway).toBe(game.metrics.runway + expectedRunwayIncrease);
+    expect(next.metrics.runway).toBeLessThan(game.metrics.runway + 12);
     expect(next.log.at(-1)).toContain("稀释 5%");
+  });
+
+  it("does not add cash or runway when founder equity is already zero", () => {
+    const game = {
+      ...baseGame(),
+      metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 10, founderEquity: 0 },
+    };
+
+    const next = executeFundraise(game);
+
+    expect(next.metrics.cash).toBe(game.metrics.cash);
+    expect(next.metrics.founderEquity).toBe(0);
+    expect(next.metrics.runway).toBe(game.metrics.runway);
+    expect(next.log.at(-1)).toContain("稀释 0%");
   });
 
   it("appends a funding log and updates valuation and runway without mutating the original game", () => {
