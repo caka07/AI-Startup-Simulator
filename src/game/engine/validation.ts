@@ -320,9 +320,21 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
         errors.push(`events/${event.id} has malformed choice`);
         continue;
       }
-      if (choiceIds.has(choice.id)) errors.push(`events/${event.id} has duplicate choice id: ${choice.id}`);
-      choiceIds.add(choice.id);
-      validateEffectList(`events/${event.id}/${choice.id}`, "effects", choice.effects, errors);
+      const choiceId = choice.id;
+      const choiceOwner = typeof choiceId === "string" && choiceId.length > 0 ? choiceId : "choice";
+      if (typeof choiceId !== "string" || choiceId.length === 0) {
+        errors.push(`events/${event.id} has invalid choice id`);
+      } else {
+        if (choiceIds.has(choiceId)) errors.push(`events/${event.id} has duplicate choice id: ${choiceId}`);
+        choiceIds.add(choiceId);
+      }
+      if (typeof choice.label !== "string" || choice.label.length === 0) {
+        errors.push(`events/${event.id}/${choiceOwner} has invalid choice label`);
+      }
+      if (typeof choice.log !== "string" || choice.log.length === 0) {
+        errors.push(`events/${event.id}/${choiceOwner} has invalid choice log`);
+      }
+      validateEffectList(`events/${event.id}/${choiceOwner}`, "effects", choice.effects, errors);
     }
   }
 

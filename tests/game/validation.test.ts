@@ -151,6 +151,22 @@ describe("content validation", () => {
     expect(result.errors).toContain("events/investor-moat-question has malformed choice");
   });
 
+  it("rejects malformed event choice fields", () => {
+    const tables = contentTables();
+    tables.events[0].choices[0] = {
+      id: 123,
+      label: null,
+      log: undefined,
+      effects: [],
+    } as unknown as GameEvent["choices"][number];
+
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question has invalid choice id");
+    expect(result.errors).toContain("events/investor-moat-question/choice has invalid choice label");
+    expect(result.errors).toContain("events/investor-moat-question/choice has invalid choice log");
+  });
+
   it("rejects missing employee role strengths without throwing", () => {
     const tables = contentTables();
     delete (tables.employeeRoles[0] as Partial<EmployeeRole>).strengths;
