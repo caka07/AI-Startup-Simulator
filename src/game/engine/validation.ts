@@ -156,6 +156,10 @@ function validateEffect(owner: string, effect: MetricEffect, errors: string[]) {
 
 function validateTriggeredContent(owner: string, items: Array<GameEvent | Achievement | Ending>, errors: string[]) {
   for (const item of items) {
+    if (!Array.isArray(item.trigger)) {
+      errors.push(`${owner}/${item.id} has missing or invalid trigger`);
+      continue;
+    }
     if (item.trigger.length === 0) errors.push(`${owner}/${item.id} has no trigger`);
     item.trigger.forEach((condition) => validateCondition(`${owner}/${item.id}`, condition, errors));
   }
@@ -200,6 +204,7 @@ function validateNotInitiallyTriggered(owner: string, items: Array<GameEvent | A
   }).metrics;
 
   for (const item of items) {
+    if (!Array.isArray(item.trigger)) continue;
     if (triggerMatches(item.trigger, initialMetrics)) {
       errors.push(`${owner}/${item.id} trigger is true for a new game`);
     }

@@ -89,6 +89,16 @@ describe("content validation", () => {
     expect(errors).toContain("achievements/hello-demo trigger is true for a new game");
   });
 
+  it("rejects missing trigger fields without throwing", () => {
+    const tables = contentTables();
+    delete (tables.achievements[0] as Partial<Achievement>).trigger;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("achievements/hello-demo has missing or invalid trigger");
+  });
+
   it("rejects duplicate choice ids and non-finite numbers", () => {
     const tables = contentTables();
     tables.events[0].choices[1].id = tables.events[0].choices[0].id;
