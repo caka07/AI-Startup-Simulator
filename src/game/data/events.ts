@@ -31,7 +31,7 @@ export const events = [
     id: "impossible-enterprise-contract",
     title: "Impossible Enterprise Contract",
     category: "customer",
-    trigger: [{ metric: "mrr", op: ">=", value: 20 }],
+    trigger: [{ metric: "mrr", op: ">=", value: 200_000 }],
     choices: [
       {
         id: "accept-custom-work",
@@ -58,7 +58,10 @@ export const events = [
     id: "deepduck-open-source-shock",
     title: "DeepDuck Releases A Cheap Model",
     category: "giant",
-    trigger: [{ metric: "modelPower", op: "<=", value: 55 }],
+    trigger: [
+      { metric: "modelPower", op: "<=", value: 55 },
+      { metric: "marketHeat", op: ">=", value: 65 },
+    ],
     choices: [
       {
         id: "wrap-with-workflow",
@@ -138,7 +141,7 @@ export const events = [
     id: "green-furnace-waitlist",
     title: "Green Furnace Opens A GPU Waitlist",
     category: "tech",
-    trigger: [{ metric: "computeSupply", op: "<=", value: 50 }],
+    trigger: [{ metric: "computeSupply", op: "<=", value: 25 }],
     choices: [
       {
         id: "prepay-capacity",
@@ -376,7 +379,7 @@ export const events = [
     id: "us-investor-asks-global-story",
     title: "US Investor Asks Global Story",
     category: "funding",
-    trigger: [{ metric: "marketHeat", op: ">=", value: 50 }],
+    trigger: [{ metric: "marketHeat", op: ">=", value: 70 }],
     choices: [
       {
         id: "pitch-global",
@@ -641,7 +644,7 @@ export const events = [
     id: "openmind-price-cut",
     title: "OpenMind Cuts API Prices",
     category: "giant",
-    trigger: [{ metric: "grossMargin", op: "<=", value: 35 }],
+    trigger: [{ metric: "grossMargin", op: "<=", value: 25 }],
     choices: [
       {
         id: "match-pricing",
@@ -747,13 +750,16 @@ export const events = [
     id: "founder-podcast-goes-viral",
     title: "Founder Podcast Goes Viral",
     category: "pr",
-    trigger: [{ metric: "founderHealth", op: ">=", value: 40 }],
+    trigger: [
+      { metric: "founderHealth", op: ">=", value: 40 },
+      { metric: "reputation", op: ">=", value: 45 },
+    ],
     choices: [
       {
         id: "convert-inbound",
         label: "Convert inbound",
         effects: [
-          { metric: "mrr", delta: 10 },
+          { metric: "mrr", delta: 100_000 },
           { metric: "reputation", delta: 5 },
         ],
         log: "The hot takes become leads before becoming liabilities.",
@@ -825,7 +831,7 @@ export const events = [
     id: "local-government-demo-day",
     title: "Local Government Demo Day",
     category: "customer",
-    trigger: [{ metric: "reputation", op: ">=", value: 30 }],
+    trigger: [{ metric: "reputation", op: ">=", value: 45 }],
     choices: [
       {
         id: "attend-demo-day",
@@ -851,7 +857,10 @@ export const events = [
     id: "enterprise-churn-scare",
     title: "Enterprise Churn Scare",
     category: "customer",
-    trigger: [{ metric: "pmf", op: "<=", value: 40 }],
+    trigger: [
+      { metric: "pmf", op: "<=", value: 40 },
+      { metric: "arr", op: ">=", value: 500_000 },
+    ],
     choices: [
       {
         id: "embed-success-team",
@@ -903,7 +912,10 @@ export const events = [
     id: "pricing-page-ridiculed",
     title: "Pricing Page Is Ridiculed",
     category: "pr",
-    trigger: [{ metric: "grossMargin", op: "<=", value: 40 }],
+    trigger: [
+      { metric: "grossMargin", op: "<=", value: 40 },
+      { metric: "arr", op: ">=", value: 500_000 },
+    ],
     choices: [
       {
         id: "simplify-pricing",
@@ -929,7 +941,10 @@ export const events = [
     id: "ai-agent-runs-amok",
     title: "AI Agent Runs Amok In Pilot",
     category: "tech",
-    trigger: [{ metric: "productQuality", op: "<=", value: 45 }],
+    trigger: [
+      { metric: "productQuality", op: "<=", value: 45 },
+      { metric: "arr", op: ">=", value: 500_000 },
+    ],
     choices: [
       {
         id: "add-guardrails",

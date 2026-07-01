@@ -28,7 +28,7 @@ export const actions = [
     name: "Sell",
     description: "Convert introductions, dinners, and anxiety into invoices.",
     effects: [
-      { metric: "mrr", delta: 8 },
+      { metric: "mrr", delta: 80_000 },
       { metric: "arr", delta: 800_000 },
       { metric: "morale", delta: -1 },
     ],

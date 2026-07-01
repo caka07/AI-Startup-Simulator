@@ -40,7 +40,7 @@ export const employeeRoles = [
     description: "Finds budget owners and occasionally sells features engineering has only dreamed about.",
     salaryBase: 480_000,
     strengths: [
-      { metric: "mrr", delta: 3 },
+      { metric: "mrr", delta: 30_000 },
       { metric: "arr", delta: 300_000 },
     ],
     risks: ["overpromising", "discount addiction"],

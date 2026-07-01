@@ -12,18 +12,127 @@ import { endings } from "../data/endings";
 import { events } from "../data/events";
 import { factions } from "../data/factions";
 import { investors } from "../data/investors";
-import type { Achievement, Condition, Ending, GameEvent, MetricEffect } from "../types";
+import { createNewGame } from "./createGame";
+import type {
+  Achievement,
+  Condition,
+  EmployeeRole,
+  Ending,
+  Faction,
+  GameEvent,
+  Investor,
+  PlayerAction,
+  MetricEffect,
+} from "../types";
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-function validateUniqueIds(label: string, ids: string[], errors: string[]) {
+interface ContentTables {
+  achievements: Achievement[];
+  actions: PlayerAction[];
+  employeeRoles: EmployeeRole[];
+  endings: Ending[];
+  events: GameEvent[];
+  factions: Faction[];
+  investors: Investor[];
+}
+
+const REQUIRED_EVENT_IDS = [
+  "investor-moat-question",
+  "impossible-enterprise-contract",
+  "deepduck-open-source-shock",
+  "core-researcher-triple-offer",
+  "board-suggests-professional-ceo",
+  "green-furnace-waitlist",
+  "byteplanet-traffic-trial",
+  "cloudsoft-pluginization",
+  "moralmachine-safety-review",
+  "sales-promised-private-deployment",
+  "cfo-finds-recognition-risk",
+  "overseas-bd-asks-for-budget",
+  "eu-customer-asks-data-lineage",
+  "middle-east-poc-marathon",
+  "us-investor-asks-global-story",
+  "employee-options-underwater",
+  "founder-health-warning",
+  "demo-crashes-at-conference",
+  "viral-pr-with-no-retention",
+  "customer-prepayment-offer",
+  "gpu-invoice-sticker-shock",
+  "regulator-visits-office",
+  "procurement-demands-local-deployment",
+  "model-benchmark-leak",
+  "openmind-price-cut",
+  "campus-recruiting-backfires",
+  "finance-flags-burn-multiple",
+  "big-bank-security-review",
+  "founder-podcast-goes-viral",
+  "dataset-consent-complaint",
+  "cloud-credit-expiration",
+  "local-government-demo-day",
+  "enterprise-churn-scare",
+  "competitor-poaches-sales-lead",
+  "pricing-page-ridiculed",
+  "ai-agent-runs-amok",
+  "board-demands-ai-native-margin",
+  "sea-reseller-wants-exclusivity",
+  "policy-team-wants-red-team",
+  "customer-asks-source-code-escrow",
+];
+
+const REQUIRED_ACHIEVEMENT_IDS = [
+  "hello-demo",
+  "first-invoice",
+  "angel-arrives",
+  "seed-player",
+  "million-mrr",
+  "ten-million-arr",
+  "series-a-graduate",
+  "series-b-expansion",
+  "unicorn-skin",
+  "gpu-ticket",
+  "first-overseas-order",
+  "hundred-million-arr",
+  "gross-margin-positive",
+  "cfo-hired",
+  "audit-ready",
+  "bell-ringer",
+  "ppt-before-product",
+  "cloud-credit-rich",
+  "employees-more-than-users",
+  "open-source-backstab-survivor",
+];
+
+const REQUIRED_ENDING_IDS = [
+  "cashflow-break",
+  "regulatory-shutdown",
+  "founder-health-collapse",
+  "open-source-crushed",
+  "giant-free-feature",
+  "acquired-by-giant",
+  "hk-ipo",
+  "us-ipo",
+  "cashflow-champion",
+  "paper-billionaire",
+  "professional-ceo-replaced-founder",
+  "lifestyle-company",
+];
+
+function validateExactIds(label: string, ids: string[], requiredIds: readonly string[], errors: string[]) {
   const seen = new Set<string>();
   for (const id of ids) {
     if (seen.has(id)) errors.push(`${label} has duplicate id: ${id}`);
     seen.add(id);
+  }
+
+  for (const requiredId of requiredIds) {
+    if (!seen.has(requiredId)) errors.push(`${label} is missing required id: ${requiredId}`);
+  }
+  for (const id of seen) {
+    if (!requiredIds.includes(id)) errors.push(`${label} has unknown id: ${id}`);
   }
 }
 
@@ -31,11 +140,17 @@ function validateCondition(owner: string, condition: Condition, errors: string[]
   if (!METRIC_IDS.includes(condition.metric)) {
     errors.push(`${owner} references unknown metric: ${condition.metric}`);
   }
+  if (!Number.isFinite(condition.value)) {
+    errors.push(`${owner} has non-finite condition value`);
+  }
 }
 
 function validateEffect(owner: string, effect: MetricEffect, errors: string[]) {
   if (!METRIC_IDS.includes(effect.metric)) {
     errors.push(`${owner} mutates unknown metric: ${effect.metric}`);
+  }
+  if (!Number.isFinite(effect.delta)) {
+    errors.push(`${owner} has non-finite effect delta`);
   }
 }
 
@@ -46,73 +161,139 @@ function validateTriggeredContent(owner: string, items: Array<GameEvent | Achiev
   }
 }
 
-export function validateContent(): ValidationResult {
+function conditionMatches(condition: Condition, metrics: Record<string, number>): boolean {
+  const value = metrics[condition.metric];
+  switch (condition.op) {
+    case ">=":
+      return value >= condition.value;
+    case ">":
+      return value > condition.value;
+    case "<=":
+      return value <= condition.value;
+    case "<":
+      return value < condition.value;
+    case "===":
+      return value === condition.value;
+  }
+}
+
+function triggerMatches(trigger: Condition[], metrics: Record<string, number>): boolean {
+  return trigger.length > 0 && trigger.every((condition) => conditionMatches(condition, metrics));
+}
+
+function validateNotInitiallyTriggered(owner: string, items: Array<GameEvent | Achievement>, errors: string[]) {
+  const initialMetrics = createNewGame({
+    seed: 1,
+    founderName: "Validation Founder",
+    backgroundId: "ex-bigtech-pm",
+    trackId: "ai-agent",
+    attributes: {
+      tech: 5,
+      sales: 5,
+      fundraising: 5,
+      management: 5,
+      ethics: 5,
+      stamina: 5,
+      hype: 5,
+      luck: 5,
+    },
+  }).metrics;
+
+  for (const item of items) {
+    if (triggerMatches(item.trigger, initialMetrics)) {
+      errors.push(`${owner}/${item.id} trigger is true for a new game`);
+    }
+  }
+}
+
+export function validateContentTables(tables: ContentTables): ValidationResult {
   const errors: string[] = [];
 
-  validateUniqueIds(
+  validateExactIds(
     "factions",
-    factions.map((item) => item.id),
+    tables.factions.map((item) => item.id),
+    FACTION_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "investors",
-    investors.map((item) => item.id),
+    tables.investors.map((item) => item.id),
+    INVESTOR_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "employeeRoles",
-    employeeRoles.map((item) => item.id),
+    tables.employeeRoles.map((item) => item.id),
+    EMPLOYEE_ROLE_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "actions",
-    actions.map((item) => item.id),
+    tables.actions.map((item) => item.id),
+    ACTION_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "events",
-    events.map((item) => item.id),
+    tables.events.map((item) => item.id),
+    REQUIRED_EVENT_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "achievements",
-    achievements.map((item) => item.id),
+    tables.achievements.map((item) => item.id),
+    REQUIRED_ACHIEVEMENT_IDS,
     errors,
   );
-  validateUniqueIds(
+  validateExactIds(
     "endings",
-    endings.map((item) => item.id),
+    tables.endings.map((item) => item.id),
+    REQUIRED_ENDING_IDS,
     errors,
   );
 
-  for (const faction of factions) {
-    if (!FACTION_IDS.includes(faction.id)) errors.push(`unknown faction id: ${faction.id}`);
-  }
-  for (const investor of investors) {
-    if (!INVESTOR_IDS.includes(investor.id)) errors.push(`unknown investor id: ${investor.id}`);
-  }
-  for (const role of employeeRoles) {
-    if (!EMPLOYEE_ROLE_IDS.includes(role.id)) errors.push(`unknown employee role id: ${role.id}`);
+  for (const role of tables.employeeRoles) {
     role.strengths.forEach((effect) => validateEffect(`employeeRoles/${role.id}`, effect, errors));
   }
-  for (const action of actions) {
-    if (!ACTION_IDS.includes(action.id)) errors.push(`unknown action id: ${action.id}`);
+  for (const action of tables.actions) {
     action.effects.forEach((effect) => validateEffect(`actions/${action.id}`, effect, errors));
   }
-  for (const action of ACTION_IDS) {
-    if (!action) errors.push("empty action id");
-  }
 
-  validateTriggeredContent("events", events, errors);
-  validateTriggeredContent("achievements", achievements, errors);
-  validateTriggeredContent("endings", endings, errors);
+  validateTriggeredContent("events", tables.events, errors);
+  validateTriggeredContent("achievements", tables.achievements, errors);
+  validateTriggeredContent("endings", tables.endings, errors);
+  validateNotInitiallyTriggered("events", tables.events, errors);
+  validateNotInitiallyTriggered("achievements", tables.achievements, errors);
 
-  for (const event of events) {
+  for (const event of tables.events) {
     if (event.choices.length < 2) errors.push(`events/${event.id} has fewer than two choices`);
+    const choiceIds = new Set<string>();
     for (const choice of event.choices) {
+      if (choiceIds.has(choice.id)) errors.push(`events/${event.id} has duplicate choice id: ${choice.id}`);
+      choiceIds.add(choice.id);
       choice.effects.forEach((effect) => validateEffect(`events/${event.id}/${choice.id}`, effect, errors));
     }
   }
 
+  for (let index = 0; index < tables.endings.length; index += 1) {
+    const ending = tables.endings[index];
+    if (!Number.isFinite(ending.priority)) errors.push(`endings/${ending.id} has non-finite priority`);
+    if (index > 0 && ending.priority < tables.endings[index - 1].priority) {
+      errors.push(`endings/${ending.id} priority is out of order`);
+    }
+  }
+
   return { valid: errors.length === 0, errors };
+}
+
+export function validateContent(): ValidationResult {
+  return validateContentTables({
+    achievements,
+    actions,
+    employeeRoles,
+    endings,
+    events,
+    factions,
+    investors,
+  });
 }

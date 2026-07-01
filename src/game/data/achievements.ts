@@ -77,13 +77,16 @@ export const achievements = [
     id: "gross-margin-positive",
     name: "Gross Margin Positive",
     description: "Inference no longer eats the whole invoice, only a concerning portion.",
-    trigger: [{ metric: "grossMargin", op: ">", value: 0 }],
+    trigger: [{ metric: "grossMargin", op: ">=", value: 45 }],
   },
   {
     id: "cfo-hired",
     name: "CFO Hired",
     description: "Someone in the company can now say revenue recognition without laughing.",
-    trigger: [{ metric: "boardPressure", op: "<=", value: 20 }],
+    trigger: [
+      { metric: "boardPressure", op: "<=", value: 20 },
+      { metric: "valuation", op: ">=", value: 50_000_000 },
+    ],
   },
   {
     id: "audit-ready",
