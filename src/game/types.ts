@@ -174,3 +174,62 @@ export interface Condition {
   op: ">=" | ">" | "<=" | "<" | "===";
   value: number;
 }
+
+export interface NamedContent<TId extends string = string> {
+  id: TId;
+  name: string;
+  description: string;
+}
+
+export interface Faction extends NamedContent<FactionId> {
+  role: string;
+  pressure: string;
+}
+
+export interface Investor extends NamedContent<InvestorId> {
+  type: string;
+  likes: string[];
+  hates: string[];
+  termStyle: "friendly" | "normal" | "pressure" | "predatory";
+}
+
+export interface EmployeeRole extends NamedContent<EmployeeRoleId> {
+  salaryBase: number;
+  strengths: MetricEffect[];
+  risks: string[];
+}
+
+export interface PlayerAction extends NamedContent<ActionId> {
+  effects: MetricEffect[];
+  healthCost: number;
+}
+
+export interface GameEventChoice {
+  id: string;
+  label: string;
+  effects: MetricEffect[];
+  log: string;
+}
+
+export interface GameEvent {
+  id: EventId;
+  title: string;
+  category: "funding" | "employee" | "giant" | "customer" | "regulation" | "tech" | "pr" | "global" | "health";
+  trigger: Condition[];
+  choices: GameEventChoice[];
+}
+
+export interface Achievement {
+  id: AchievementId;
+  name: string;
+  description: string;
+  trigger: Condition[];
+}
+
+export interface Ending {
+  id: EndingId;
+  name: string;
+  description: string;
+  priority: number;
+  trigger: Condition[];
+}
