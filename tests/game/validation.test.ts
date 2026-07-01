@@ -99,6 +99,25 @@ describe("content validation", () => {
     expect(result.errors).toContain("achievements/hello-demo has missing or invalid trigger");
   });
 
+  it("rejects invalid trigger operators", () => {
+    const tables = contentTables();
+    tables.events[0].trigger[0].op = "==" as GameEvent["trigger"][number]["op"];
+
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question uses invalid operator: ==");
+  });
+
+  it("rejects missing event choices without throwing", () => {
+    const tables = contentTables();
+    delete (tables.events[0] as Partial<GameEvent>).choices;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question has missing or invalid choices");
+  });
+
   it("rejects duplicate choice ids and non-finite numbers", () => {
     const tables = contentTables();
     tables.events[0].choices[1].id = tables.events[0].choices[0].id;

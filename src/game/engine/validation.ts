@@ -121,6 +121,8 @@ const REQUIRED_ENDING_IDS = [
   "lifestyle-company",
 ];
 
+const ALLOWED_CONDITION_OPERATORS = [">=", ">", "<=", "<", "==="];
+
 function validateExactIds(label: string, ids: string[], requiredIds: readonly string[], errors: string[]) {
   const seen = new Set<string>();
   for (const id of ids) {
@@ -139,6 +141,9 @@ function validateExactIds(label: string, ids: string[], requiredIds: readonly st
 function validateCondition(owner: string, condition: Condition, errors: string[]) {
   if (!METRIC_IDS.includes(condition.metric)) {
     errors.push(`${owner} references unknown metric: ${condition.metric}`);
+  }
+  if (!ALLOWED_CONDITION_OPERATORS.includes(condition.op)) {
+    errors.push(`${owner} uses invalid operator: ${condition.op}`);
   }
   if (!Number.isFinite(condition.value)) {
     errors.push(`${owner} has non-finite condition value`);
@@ -178,6 +183,8 @@ function conditionMatches(condition: Condition, metrics: Record<string, number>)
       return value < condition.value;
     case "===":
       return value === condition.value;
+    default:
+      return false;
   }
 }
 
@@ -271,6 +278,10 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
   validateNotInitiallyTriggered("achievements", tables.achievements, errors);
 
   for (const event of tables.events) {
+    if (!Array.isArray(event.choices)) {
+      errors.push(`events/${event.id} has missing or invalid choices`);
+      continue;
+    }
     if (event.choices.length < 2) errors.push(`events/${event.id} has fewer than two choices`);
     const choiceIds = new Set<string>();
     for (const choice of event.choices) {
