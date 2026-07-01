@@ -1,3 +1,4 @@
+import { BALANCE } from "../balance";
 import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS } from "../constants";
 import type { CompanyMetrics, GameState, MarketState, NewGameInput } from "../types";
 
@@ -43,7 +44,7 @@ function createMarkets(): Record<string, MarketState> {
 export function createNewGame(input: NewGameInput): GameState {
   return {
     seed: input.seed,
-    year: 2026,
+    year: BALANCE.startYear,
     quarter: 1,
     founder: {
       name: input.founderName,
