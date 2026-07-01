@@ -138,23 +138,40 @@ function validateExactIds(label: string, ids: string[], requiredIds: readonly st
   }
 }
 
-function validateCondition(owner: string, condition: Condition, errors: string[]) {
-  if (!METRIC_IDS.includes(condition.metric)) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function validateCondition(owner: string, condition: unknown, errors: string[]) {
+  if (!isRecord(condition)) {
+    errors.push(`${owner} has malformed trigger condition`);
+    return;
+  }
+  const metric = condition.metric;
+  const op = condition.op;
+  const value = condition.value;
+  if (typeof metric !== "string" || !(METRIC_IDS as readonly string[]).includes(metric)) {
     errors.push(`${owner} references unknown metric: ${condition.metric}`);
   }
-  if (!ALLOWED_CONDITION_OPERATORS.includes(condition.op)) {
+  if (typeof op !== "string" || !ALLOWED_CONDITION_OPERATORS.includes(op)) {
     errors.push(`${owner} uses invalid operator: ${condition.op}`);
   }
-  if (!Number.isFinite(condition.value)) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
     errors.push(`${owner} has non-finite condition value`);
   }
 }
 
-function validateEffect(owner: string, effect: MetricEffect, errors: string[]) {
-  if (!METRIC_IDS.includes(effect.metric)) {
+function validateEffect(owner: string, effect: unknown, errors: string[]) {
+  if (!isRecord(effect)) {
+    errors.push(`${owner} has malformed effect`);
+    return;
+  }
+  const metric = effect.metric;
+  const delta = effect.delta;
+  if (typeof metric !== "string" || !(METRIC_IDS as readonly string[]).includes(metric)) {
     errors.push(`${owner} mutates unknown metric: ${effect.metric}`);
   }
-  if (!Number.isFinite(effect.delta)) {
+  if (typeof delta !== "number" || !Number.isFinite(delta)) {
     errors.push(`${owner} has non-finite effect delta`);
   }
 }
@@ -178,29 +195,34 @@ function validateTriggeredContent(owner: string, items: Array<GameEvent | Achiev
   }
 }
 
-function conditionMatches(condition: Condition, metrics: Record<string, number>): boolean {
-  const value = metrics[condition.metric];
+function conditionMatches(condition: unknown, metrics: Record<string, number>): boolean {
+  if (!isRecord(condition)) return false;
+  const metric = condition.metric;
+  const conditionValue = condition.value;
+  if (typeof metric !== "string" || typeof conditionValue !== "number") return false;
+
+  const value = metrics[metric];
   switch (condition.op) {
     case ">=":
-      return value >= condition.value;
+      return value >= conditionValue;
     case ">":
-      return value > condition.value;
+      return value > conditionValue;
     case "<=":
-      return value <= condition.value;
+      return value <= conditionValue;
     case "<":
-      return value < condition.value;
+      return value < conditionValue;
     case "===":
-      return value === condition.value;
+      return value === conditionValue;
     default:
       return false;
   }
 }
 
-function triggerMatches(trigger: Condition[], metrics: Record<string, number>): boolean {
+function triggerMatches(trigger: unknown[], metrics: Record<string, number>): boolean {
   return trigger.length > 0 && trigger.every((condition) => conditionMatches(condition, metrics));
 }
 
-function validateNotInitiallyTriggered(owner: string, items: Array<GameEvent | Achievement>, errors: string[]) {
+function validateNotInitiallyTriggered(owner: string, items: Array<GameEvent | Achievement | Ending>, errors: string[]) {
   const initialMetrics = createNewGame({
     seed: 1,
     founderName: "Validation Founder",
@@ -284,6 +306,7 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
   validateTriggeredContent("endings", tables.endings, errors);
   validateNotInitiallyTriggered("events", tables.events, errors);
   validateNotInitiallyTriggered("achievements", tables.achievements, errors);
+  validateNotInitiallyTriggered("endings", tables.endings, errors);
 
   for (const event of tables.events) {
     if (!Array.isArray(event.choices)) {
@@ -293,6 +316,10 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
     if (event.choices.length < 2) errors.push(`events/${event.id} has fewer than two choices`);
     const choiceIds = new Set<string>();
     for (const choice of event.choices) {
+      if (!isRecord(choice)) {
+        errors.push(`events/${event.id} has malformed choice`);
+        continue;
+      }
       if (choiceIds.has(choice.id)) errors.push(`events/${event.id} has duplicate choice id: ${choice.id}`);
       choiceIds.add(choice.id);
       validateEffectList(`events/${event.id}/${choice.id}`, "effects", choice.effects, errors);

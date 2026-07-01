@@ -93,6 +93,15 @@ describe("content validation", () => {
     expect(errors).toContain("achievements/hello-demo trigger is true for a new game");
   });
 
+  it("rejects ending triggers that are true for a new game", () => {
+    const tables = contentTables();
+    tables.endings[0].trigger = [{ metric: "cash", op: ">=", value: 3_000_000 }];
+
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("endings/cashflow-break trigger is true for a new game");
+  });
+
   it("rejects missing trigger fields without throwing", () => {
     const tables = contentTables();
     delete (tables.achievements[0] as Partial<Achievement>).trigger;
@@ -101,6 +110,16 @@ describe("content validation", () => {
     const result = validateContentTables(tables);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("achievements/hello-demo has missing or invalid trigger");
+  });
+
+  it("rejects malformed trigger members without throwing", () => {
+    const tables = contentTables();
+    tables.events[0].trigger.push(null as unknown as GameEvent["trigger"][number]);
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question has malformed trigger condition");
   });
 
   it("rejects invalid trigger operators", () => {
@@ -120,6 +139,16 @@ describe("content validation", () => {
     const result = validateContentTables(tables);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("events/investor-moat-question has missing or invalid choices");
+  });
+
+  it("rejects malformed event choice members without throwing", () => {
+    const tables = contentTables();
+    tables.events[0].choices.push(null as unknown as GameEvent["choices"][number]);
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("events/investor-moat-question has malformed choice");
   });
 
   it("rejects missing employee role strengths without throwing", () => {
@@ -150,6 +179,16 @@ describe("content validation", () => {
     const result = validateContentTables(tables);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("events/investor-moat-question/show-enterprise-workflows has missing or invalid effects");
+  });
+
+  it("rejects malformed effect members without throwing", () => {
+    const tables = contentTables();
+    tables.actions[0].effects.push(null as unknown as MetricEffect);
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("actions/build-product has malformed effect");
   });
 
   it("rejects duplicate choice ids and non-finite numbers", () => {
