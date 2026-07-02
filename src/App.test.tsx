@@ -179,6 +179,18 @@ describe("App", () => {
     expect(loadGame()?.log.some((entry) => entry.includes("员工操作"))).toBe(true);
   });
 
+  it("opens an achievement panel with visible progress and hidden conditions", () => {
+    saveGame(createSavedGame());
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "成就" }));
+
+    expect(screen.getByRole("dialog", { name: "成就" })).toBeInTheDocument();
+    expect(screen.getAllByText("???").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/MRR/).length).toBeGreaterThan(0);
+  });
+
   it("loads a saved active game and can reset it during play", () => {
     saveGame(createSavedGame({ year: 2027, quarter: 3 }));
 

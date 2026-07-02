@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Trophy } from "lucide-react";
 import type { ActionId, EmployeeOperationId, GameEvent, GameState, NewGameInput } from "./game/types";
 import { createNewGame } from "./game/engine/createGame";
 import { getEligibleEvents } from "./game/engine/events";
@@ -12,8 +12,10 @@ import { EventCard } from "./game/ui/EventCard";
 import { EmployeeOperationPanel } from "./game/ui/EmployeeOperationPanel";
 import { EmployeePanel } from "./game/ui/EmployeePanel";
 import { FinancingPanel } from "./game/ui/FinancingPanel";
+import { LeaderboardPanel } from "./game/ui/LeaderboardPanel";
 import { AnnualReport } from "./game/ui/AnnualReport";
 import { GameOver } from "./game/ui/GameOver";
+import { AchievementsModal } from "./game/ui/AchievementsModal";
 
 interface AppState {
   game: GameState | null;
@@ -37,11 +39,13 @@ function createInitialAppState(): AppState {
 export function App() {
   const [{ game, activeEvent }, setAppState] = useState<AppState>(() => createInitialAppState());
   const [selectedEmployeeOperation, setSelectedEmployeeOperation] = useState<EmployeeOperationId | null>(null);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   function saveAndSetGame(next: GameState, nextActiveEvent: GameEvent | null) {
     saveGame(next);
     setAppState({ game: next, activeEvent: nextActiveEvent });
     setSelectedEmployeeOperation(null);
+    setAchievementsOpen(false);
   }
 
   function start(input: NewGameInput) {
@@ -103,10 +107,16 @@ export function App() {
             <RotateCcw aria-hidden="true" size={16} />
             重置存档
           </button>
+          <button className="secondary-button reset-button" onClick={() => setAchievementsOpen(true)} type="button">
+            <Trophy aria-hidden="true" size={16} />
+            成就
+          </button>
+          <LeaderboardPanel game={game} />
           <EmployeePanel game={game} />
           <FinancingPanel game={game} />
         </aside>
       </div>
+      {achievementsOpen ? <AchievementsModal game={game} onClose={() => setAchievementsOpen(false)} /> : null}
     </main>
   );
 }

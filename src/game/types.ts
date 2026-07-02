@@ -231,6 +231,9 @@ export interface Achievement {
   id: AchievementId;
   name: string;
   description: string;
+  conditionText: string;
+  tier: "普通" | "稀有" | "史诗" | "隐藏";
+  hiddenCondition?: boolean;
   trigger: Condition[];
 }
 

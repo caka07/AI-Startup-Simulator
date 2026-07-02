@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../src/game/engine/createGame";
+import { achievements } from "../../src/game/data/achievements";
 import { unlockAchievements } from "../../src/game/engine/achievements";
 import type { GameState, NewGameInput } from "../../src/game/types";
 
@@ -29,7 +30,7 @@ describe("achievements", () => {
     const next = unlockAchievements(game);
 
     expect(next.completedAchievements).toContain("ten-million-arr");
-    expect(next.log.at(-1)).toContain("Ten Million ARR");
+    expect(next.log.at(-1)).toContain("千万 ARR");
     expect(game.completedAchievements).toEqual([]);
   });
 
@@ -40,6 +41,19 @@ describe("achievements", () => {
     const second = unlockAchievements(first);
 
     expect(second.completedAchievements.filter((id) => id === "ten-million-arr")).toHaveLength(1);
-    expect(second.log.filter((entry) => entry.includes("Ten Million ARR"))).toHaveLength(1);
+    expect(second.log.filter((entry) => entry.includes("千万 ARR"))).toHaveLength(1);
+  });
+
+  it("exposes visible condition text while keeping hidden achievement conditions secret", () => {
+    const visible = achievements.find((achievement) => achievement.id === "first-invoice");
+    const hidden = achievements.find(
+      (achievement) => "hiddenCondition" in achievement && achievement.hiddenCondition === true,
+    );
+
+    expect(visible && "conditionText" in visible ? visible.conditionText : undefined).toEqual(
+      expect.stringContaining("MRR"),
+    );
+    expect(hidden).toBeDefined();
+    expect(hidden && "conditionText" in hidden ? hidden.conditionText : undefined).toBe("???");
   });
 });
