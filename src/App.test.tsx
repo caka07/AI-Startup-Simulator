@@ -66,8 +66,12 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByLabelText("创始人姓名")).toHaveValue("沈一");
-    expect(screen.getByLabelText("创业背景")).toHaveValue("ex-bigtech-pm");
-    expect(screen.getByLabelText("创业赛道")).toHaveValue("ai-agent");
+    expect(
+      within(screen.getByRole("region", { name: "创业身份" })).getByRole("button", { name: /大厂产品经理/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(screen.getByRole("region", { name: "创业赛道" })).getByRole("button", { name: /AI Agent/ }),
+    ).toHaveAttribute("aria-pressed", "true");
 
     fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
 
@@ -161,7 +165,7 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "重置存档" }));
 
-    expect(screen.getByRole("heading", { name: "创建创始人" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "创始人简报" })).toBeInTheDocument();
     expect(loadGame()).toBeNull();
   });
 
@@ -174,7 +178,7 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "重置存档" }));
 
-    expect(screen.getByRole("heading", { name: "创建创始人" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "创始人简报" })).toBeInTheDocument();
     expect(loadGame()).toBeNull();
   });
 

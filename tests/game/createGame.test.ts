@@ -44,13 +44,13 @@ describe("createNewGame", () => {
       runway: 12,
       arr: 0,
       mrr: 0,
-      pmf: 25,
+      pmf: 31,
       modelPower: 25,
-      productQuality: 25,
+      productQuality: 32,
       computeSupply: 35,
       computeCost: 20,
       grossMargin: 35,
-      techDebt: 15,
+      techDebt: 19,
       reputation: 30,
       morale: 60,
       complianceRisk: 20,
@@ -101,5 +101,44 @@ describe("createNewGame", () => {
     expect(game.resolvedEventIds).toEqual([]);
     expect(game.endingId).toBeNull();
     expect(game.log[0]).toContain("沈一创办了公司");
+  });
+
+  it("applies background and track effects to initial metrics", () => {
+    const researcher = createNewGame({
+      seed: 42,
+      founderName: "沈一",
+      backgroundId: "former-llm-researcher",
+      trackId: "foundation-model",
+      attributes: {
+        tech: 5,
+        sales: 2,
+        fundraising: 2,
+        management: 2,
+        ethics: 4,
+        stamina: 3,
+        hype: 2,
+        luck: 4,
+      },
+    });
+    const pm = createNewGame({
+      seed: 42,
+      founderName: "沈一",
+      backgroundId: "ex-bigtech-pm",
+      trackId: "enterprise-knowledge",
+      attributes: {
+        tech: 3,
+        sales: 3,
+        fundraising: 4,
+        management: 3,
+        ethics: 3,
+        stamina: 3,
+        hype: 3,
+        luck: 2,
+      },
+    });
+
+    expect(researcher.metrics.modelPower).toBeGreaterThan(pm.metrics.modelPower);
+    expect(pm.metrics.productQuality).toBeGreaterThan(researcher.metrics.productQuality);
+    expect(pm.metrics.arr).toBeGreaterThan(researcher.metrics.arr);
   });
 });

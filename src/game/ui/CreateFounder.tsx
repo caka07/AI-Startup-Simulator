@@ -1,94 +1,49 @@
-import { Rocket } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Flame, Orbit, Rocket } from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
+import {
+  ATTRIBUTE_IDS,
+  ATTRIBUTE_LABELS,
+  TARGET_ATTRIBUTE_TOTAL,
+  attributePresets,
+  backgroundProfiles,
+  findBackgroundProfile,
+  findTrackProfile,
+  trackProfiles,
+} from "../data/founderProfiles";
 import type { BackgroundId, FounderAttributeId, FounderAttributes, NewGameInput, TrackId } from "../types";
 
 interface CreateFounderProps {
   onStart: (input: NewGameInput) => void;
 }
 
-const ATTRIBUTE_IDS: FounderAttributeId[] = [
-  "tech",
-  "sales",
-  "fundraising",
-  "management",
-  "ethics",
-  "stamina",
-  "hype",
-  "luck",
-];
-
-const ATTRIBUTE_LABELS: Record<FounderAttributeId, string> = {
-  tech: "技术",
-  sales: "销售",
-  fundraising: "融资",
-  management: "管理",
-  ethics: "伦理",
-  stamina: "体力",
-  hype: "声量",
-  luck: "运气",
-};
-
-const BACKGROUND_OPTIONS: Array<{ id: BackgroundId; label: string }> = [
-  { id: "ex-bigtech-pm", label: "大厂产品经理" },
-  { id: "former-llm-researcher", label: "前大模型研究员" },
-  { id: "serial-founder", label: "连续创业者" },
-  { id: "overseas-phd", label: "海外博士" },
-  { id: "open-source-maintainer", label: "开源维护者" },
-  { id: "failed-incubation-team", label: "失败孵化团队" },
-  { id: "rich-kid-founder", label: "资源型创始人" },
-  { id: "indie-hacker", label: "独立开发者" },
-];
-
-const TRACK_OPTIONS: Array<{ id: TrackId; label: string }> = [
-  { id: "foundation-model", label: "基础模型" },
-  { id: "ai-agent", label: "AI Agent" },
-  { id: "ai-coding", label: "AI 编程" },
-  { id: "enterprise-knowledge", label: "企业知识库" },
-  { id: "ai-education", label: "AI 教育" },
-  { id: "ai-companion", label: "AI 陪伴" },
-  { id: "ai-hardware", label: "AI 硬件" },
-  { id: "ai-security", label: "AI 安全" },
-  { id: "medical-ai", label: "医疗 AI" },
-  { id: "finance-ai", label: "金融 AI" },
-  { id: "manufacturing-ai", label: "制造业 AI" },
-  { id: "local-life-agent", label: "本地生活 Agent" },
-];
-
-const ATTRIBUTE_PRESETS: Array<{ id: string; label: string; attributes: FounderAttributes }> = [
-  {
-    id: "operator",
-    label: "运营型",
-    attributes: { tech: 3, sales: 3, fundraising: 4, management: 3, ethics: 3, stamina: 3, hype: 3, luck: 2 },
-  },
-  {
-    id: "researcher",
-    label: "技术型",
-    attributes: { tech: 5, sales: 2, fundraising: 2, management: 2, ethics: 4, stamina: 3, hype: 2, luck: 4 },
-  },
-  {
-    id: "rainmaker",
-    label: "融资型",
-    attributes: { tech: 2, sales: 4, fundraising: 5, management: 3, ethics: 2, stamina: 3, hype: 4, luck: 1 },
-  },
-];
-
-const TARGET_ATTRIBUTE_TOTAL = 24;
-
 function attributeTotal(attributes: FounderAttributes): number {
   return ATTRIBUTE_IDS.reduce((total, id) => total + attributes[id], 0);
 }
 
 export function CreateFounder({ onStart }: CreateFounderProps) {
+  const defaultBackground = backgroundProfiles[0];
+  const defaultTrack = trackProfiles.find((track) => track.id === "ai-agent") ?? trackProfiles[0];
   const [founderName, setFounderName] = useState("沈一");
-  const [backgroundId, setBackgroundId] = useState<BackgroundId>("ex-bigtech-pm");
-  const [trackId, setTrackId] = useState<TrackId>("ai-agent");
-  const [presetId, setPresetId] = useState(ATTRIBUTE_PRESETS[0].id);
-  const [attributes, setAttributes] = useState<FounderAttributes>(ATTRIBUTE_PRESETS[0].attributes);
+  const [backgroundId, setBackgroundId] = useState<BackgroundId>(defaultBackground.id);
+  const [trackId, setTrackId] = useState<TrackId>(defaultTrack.id);
+  const [presetId, setPresetId] = useState(`background-${defaultBackground.id}`);
+  const [attributes, setAttributes] = useState<FounderAttributes>(defaultBackground.attributes);
+
+  const selectedBackground = useMemo(() => findBackgroundProfile(backgroundId) ?? defaultBackground, [backgroundId]);
+  const selectedTrack = useMemo(() => findTrackProfile(trackId) ?? defaultTrack, [trackId]);
   const total = attributeTotal(attributes);
   const canStart = founderName.trim().length > 0 && total === TARGET_ATTRIBUTE_TOTAL;
 
+  function selectBackground(id: BackgroundId) {
+    const profile = findBackgroundProfile(id);
+    if (!profile) return;
+    setBackgroundId(id);
+    setPresetId(`background-${id}`);
+    setAttributes(profile.attributes);
+  }
+
   function selectPreset(id: string) {
-    const preset = ATTRIBUTE_PRESETS.find((item) => item.id === id);
+    const preset = attributePresets.find((item) => item.id === id);
     if (!preset) return;
     setPresetId(id);
     setAttributes(preset.attributes);
@@ -113,48 +68,101 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
 
   return (
     <main className="create-shell">
-      <form className="create-panel" onSubmit={submit}>
-        <div className="panel-heading">
+      <form className="create-panel briefing-panel" onSubmit={submit}>
+        <div className="panel-heading hero-heading">
           <div>
             <p className="eyebrow">AI 创业模拟器</p>
-            <h1>创建创始人</h1>
+            <h1>
+              <Orbit aria-hidden="true" size={24} />
+              创始人简报
+            </h1>
           </div>
           <span className={total === TARGET_ATTRIBUTE_TOTAL ? "status-pill success" : "status-pill warning"}>
             属性点 {total}/{TARGET_ATTRIBUTE_TOTAL}
           </span>
         </div>
 
-        <div className="form-grid">
-          <label className="field">
-            <span>创始人姓名</span>
-            <input value={founderName} onChange={(event) => setFounderName(event.target.value)} />
-          </label>
-          <label className="field">
-            <span>创业背景</span>
-            <select value={backgroundId} onChange={(event) => setBackgroundId(event.target.value as BackgroundId)}>
-              {BACKGROUND_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>创业赛道</span>
-            <select value={trackId} onChange={(event) => setTrackId(event.target.value as TrackId)}>
-              {TRACK_OPTIONS.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <section className="briefing-copy" aria-label="玩法说明">
+          <div>
+            <h2>
+              <Flame aria-hidden="true" size={20} />
+              从一间会议室打到全球榜单
+            </h2>
+            <p>
+              每个季度选择 2 个公司动作；招到人后，还要额外处理 1 个员工动作。融资、裁员、PUA、全球化、巨头围剿和监管审查都会改变你的现金、PMF、Runway、声誉与创始人股权。
+            </p>
+          </div>
+          <div>
+            <h2>胜利不是上市，是活着抵达那天</h2>
+            <p>
+              AI 巨头会刷新排行榜，投资人会催你讲新故事，员工会被三倍薪资挖走。你可以功成名就，也可以在最后一版 Demo 前现金断裂。
+            </p>
+          </div>
+        </section>
+
+        <label className="field founder-name-field">
+          <span>创始人姓名</span>
+          <input
+            aria-label="创始人姓名"
+            value={founderName}
+            onChange={(event) => setFounderName(event.target.value)}
+          />
+        </label>
+
+        <section className="selection-section" aria-label="创业身份">
+          <div className="section-title-row">
+            <div>
+              <p className="eyebrow">身份决定开局资源</p>
+              <h2>选择创业身份</h2>
+            </div>
+            <span className="status-pill neutral">{selectedBackground.label}</span>
+          </div>
+          <div className="profile-grid">
+            {backgroundProfiles.map((profile) => (
+              <button
+                aria-pressed={backgroundId === profile.id}
+                className={backgroundId === profile.id ? "profile-card selected" : "profile-card"}
+                key={profile.id}
+                onClick={() => selectBackground(profile.id)}
+                type="button"
+              >
+                <strong>{profile.label}</strong>
+                <span>{profile.description}</span>
+                <small>{profile.specialty}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="selection-section" aria-label="创业赛道">
+          <div className="section-title-row">
+            <div>
+              <p className="eyebrow">赛道决定第一场风暴</p>
+              <h2>选择创业赛道</h2>
+            </div>
+            <span className="status-pill neutral">{selectedTrack.label}</span>
+          </div>
+          <div className="track-grid">
+            {trackProfiles.map((track) => (
+              <button
+                aria-pressed={trackId === track.id}
+                className={trackId === track.id ? "track-card selected" : "track-card"}
+                key={track.id}
+                onClick={() => setTrackId(track.id)}
+                type="button"
+              >
+                <strong>{track.label}</strong>
+                <span>{track.description}</span>
+                <small>{track.focus}</small>
+              </button>
+            ))}
+          </div>
+        </section>
 
         <fieldset className="preset-fieldset">
           <legend>属性预设</legend>
           <div className="preset-grid">
-            {ATTRIBUTE_PRESETS.map((preset) => (
+            {attributePresets.map((preset) => (
               <button
                 aria-pressed={presetId === preset.id}
                 className={presetId === preset.id ? "preset-button selected" : "preset-button"}
@@ -162,7 +170,8 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
                 onClick={() => selectPreset(preset.id)}
                 type="button"
               >
-                {preset.label}
+                <strong>{preset.label}</strong>
+                <span>{preset.description}</span>
               </button>
             ))}
           </div>

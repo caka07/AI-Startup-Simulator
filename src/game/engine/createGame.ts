@@ -1,6 +1,8 @@
 import { BALANCE } from "../balance";
 import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS } from "../constants";
-import type { CompanyMetrics, GameState, MarketState, NewGameInput } from "../types";
+import { findBackgroundProfile, findTrackProfile } from "../data/founderProfiles";
+import type { CompanyMetrics, GameState, MarketState, MetricEffect, NewGameInput } from "../types";
+import { applyMetricDelta } from "./clamp";
 
 function createInitialMetrics(): CompanyMetrics {
   return {
@@ -41,6 +43,16 @@ function createMarkets(): Record<string, MarketState> {
   );
 }
 
+function applyEffects(metrics: CompanyMetrics, effects: MetricEffect[]): CompanyMetrics {
+  return effects.reduce((nextMetrics, effect) => applyMetricDelta(nextMetrics, effect.metric, effect.delta), metrics);
+}
+
+function createProfiledMetrics(input: NewGameInput): CompanyMetrics {
+  const background = findBackgroundProfile(input.backgroundId);
+  const track = findTrackProfile(input.trackId);
+  return applyEffects(applyEffects(createInitialMetrics(), background?.metricEffects ?? []), track?.metricEffects ?? []);
+}
+
 export function createNewGame(input: NewGameInput): GameState {
   return {
     seed: input.seed,
@@ -52,7 +64,7 @@ export function createNewGame(input: NewGameInput): GameState {
       trackId: input.trackId,
       attributes: input.attributes,
     },
-    metrics: createInitialMetrics(),
+    metrics: createProfiledMetrics(input),
     employees: [],
     markets: createMarkets() as GameState["markets"],
     investorRelations: Object.fromEntries(INVESTOR_IDS.map((id) => [id, 0])) as GameState["investorRelations"],
