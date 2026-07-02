@@ -1,15 +1,10 @@
 import { useState } from "react";
+import { RotateCcw } from "lucide-react";
 import type { ActionId, GameEvent, GameState, NewGameInput } from "./game/types";
-import { EMPLOYEE_ROLE_IDS } from "./game/constants";
-import { actions as playerActions } from "./game/data/actions";
 import { createNewGame } from "./game/engine/createGame";
-import { advanceQuarter } from "./game/engine/advance";
-import { getEligibleEvents, resolveEventChoice } from "./game/engine/events";
-import { unlockAchievements } from "./game/engine/achievements";
-import { evaluateEnding } from "./game/engine/endings";
-import { hireEmployee } from "./game/engine/employees";
-import { executeFundraise } from "./game/engine/finance";
-import { applyMetricDelta } from "./game/engine/clamp";
+import { getEligibleEvents } from "./game/engine/events";
+import { clearGame, loadGame, saveGame } from "./game/engine/persistence";
+import { advanceGameTurn, resolveGameEventChoice } from "./game/engine/turn";
 import { CreateFounder } from "./game/ui/CreateFounder";
 import { Dashboard } from "./game/ui/Dashboard";
 import { ActionPanel } from "./game/ui/ActionPanel";
@@ -19,71 +14,57 @@ import { FinancingPanel } from "./game/ui/FinancingPanel";
 import { AnnualReport } from "./game/ui/AnnualReport";
 import { GameOver } from "./game/ui/GameOver";
 
-const ACTION_HEALTH_COSTS = Object.fromEntries(
-  playerActions.map((action) => [action.id, action.healthCost]),
-) as Record<ActionId, number>;
+interface AppState {
+  game: GameState | null;
+  activeEvent: GameEvent | null;
+}
 
-function applyActionHealthCost(game: GameState, actionId: ActionId): GameState {
+function pickActiveEvent(nextGame: GameState): GameEvent | null {
+  if (nextGame.endingId) return null;
+  const resolvedIds = new Set(nextGame.resolvedEventIds);
+  return getEligibleEvents(nextGame).find((event) => !resolvedIds.has(event.id)) ?? null;
+}
+
+function createInitialAppState(): AppState {
+  const game = loadGame();
   return {
-    ...game,
-    metrics: applyMetricDelta(game.metrics, "founderHealth", -ACTION_HEALTH_COSTS[actionId]),
+    game,
+    activeEvent: game ? pickActiveEvent(game) : null,
   };
 }
 
 export function App() {
-  const [game, setGame] = useState<GameState | null>(null);
-  const [activeEvent, setActiveEvent] = useState<GameEvent | null>(null);
-  const [resolvedEventIds, setResolvedEventIds] = useState<Set<string>>(() => new Set());
+  const [{ game, activeEvent }, setAppState] = useState<AppState>(() => createInitialAppState());
 
-  function pickActiveEvent(nextGame: GameState, resolvedIds: Set<string>): GameEvent | null {
-    if (nextGame.endingId) return null;
-    return getEligibleEvents(nextGame).find((event) => !resolvedIds.has(event.id)) ?? null;
+  function saveAndSetGame(next: GameState, nextActiveEvent: GameEvent | null) {
+    saveGame(next);
+    setAppState({ game: next, activeEvent: nextActiveEvent });
   }
 
   function start(input: NewGameInput) {
-    setActiveEvent(null);
-    setResolvedEventIds(new Set());
-    setGame(createNewGame(input));
+    const next = createNewGame(input);
+    saveAndSetGame(next, null);
+  }
+
+  function reset() {
+    clearGame();
+    setAppState({ game: null, activeEvent: null });
   }
 
   function applyTurn(actions: ActionId[]) {
     if (!game) return;
-    const includesFundraise = actions.includes("fundraise");
-    const genericActions = actions.filter((id) => id !== "fundraise");
-    let next = advanceQuarter(game, genericActions);
-    if (actions.includes("hire")) {
-      const role = EMPLOYEE_ROLE_IDS[next.employees.length % EMPLOYEE_ROLE_IDS.length];
-      next = hireEmployee(next, role);
-    }
-    if (includesFundraise) {
-      next = applyActionHealthCost(next, "fundraise");
-      next = executeFundraise(next);
-    }
-    next = unlockAchievements(next);
-    const ending = evaluateEnding(next);
-    if (ending) next = { ...next, endingId: ending.id };
-    setGame(next);
-    setActiveEvent(pickActiveEvent(next, resolvedEventIds));
+    const next = advanceGameTurn(game, actions);
+    saveAndSetGame(next, pickActiveEvent(next));
   }
 
   function chooseEvent(choiceId: string) {
     if (!game || !activeEvent) return;
-    const resolvedEventId = activeEvent.id;
-    let next = resolveEventChoice(game, activeEvent, choiceId);
-    next = unlockAchievements(next);
-    const ending = evaluateEnding(next);
-    if (ending) next = { ...next, endingId: ending.id };
-    setGame(next);
-    setResolvedEventIds((previous) => {
-      const resolved = new Set(previous);
-      resolved.add(resolvedEventId);
-      return resolved;
-    });
-    setActiveEvent(null);
+    const next = resolveGameEventChoice(game, activeEvent, choiceId);
+    saveAndSetGame(next, null);
   }
 
   if (!game) return <CreateFounder onStart={start} />;
-  if (game.endingId) return <GameOver game={game} />;
+  if (game.endingId) return <GameOver game={game} onReset={reset} />;
 
   return (
     <main className="app-shell">
@@ -94,6 +75,10 @@ export function App() {
           <AnnualReport game={game} />
         </section>
         <aside className="side-column" aria-label="运营侧栏">
+          <button className="secondary-button reset-button" onClick={reset} type="button">
+            <RotateCcw aria-hidden="true" size={16} />
+            重置存档
+          </button>
           <EmployeePanel game={game} />
           <FinancingPanel game={game} />
         </aside>

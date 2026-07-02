@@ -1,10 +1,11 @@
-import { CircleAlert, Trophy } from "lucide-react";
+import { CircleAlert, RotateCcw, Trophy } from "lucide-react";
 import { achievements } from "../data/achievements";
 import { endings } from "../data/endings";
 import type { AchievementId, GameState } from "../types";
 
 interface GameOverProps {
   game: GameState;
+  onReset: () => void;
 }
 
 const ACHIEVEMENT_NAMES: Record<AchievementId, string> = Object.fromEntries(
@@ -25,7 +26,7 @@ function formatMoney(value: number): string {
   return `¥${Math.round(value / 10_000)}万`;
 }
 
-export function GameOver({ game }: GameOverProps) {
+export function GameOver({ game, onReset }: GameOverProps) {
   const ending = endings.find((item) => item.id === game.endingId);
   const isSuccessEnding = Boolean(game.endingId && SUCCESS_ENDING_IDS.has(game.endingId));
   const EndingIcon = isSuccessEnding ? Trophy : CircleAlert;
@@ -41,9 +42,15 @@ export function GameOver({ game }: GameOverProps) {
               {ending?.name ?? "Unknown Ending"}
             </h1>
           </div>
-          <span className={isSuccessEnding ? "status-pill success" : "status-pill warning"}>
-            {isSuccessEnding ? "Outcome" : "Closure"}
-          </span>
+          <div className="game-over-actions">
+            <span className={isSuccessEnding ? "status-pill success" : "status-pill warning"}>
+              {isSuccessEnding ? "Outcome" : "Closure"}
+            </span>
+            <button className="secondary-button" onClick={onReset} type="button">
+              <RotateCcw aria-hidden="true" size={16} />
+              重置存档
+            </button>
+          </div>
         </div>
 
         <p className="ending-description">{ending?.description ?? "No ending details found."}</p>

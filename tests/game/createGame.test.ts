@@ -98,6 +98,7 @@ describe("createNewGame", () => {
     expect(Object.keys(game.factionRelations)).toEqual(FACTION_IDS);
     expect(game.factionRelations).toEqual(Object.fromEntries(FACTION_IDS.map((id) => [id, 0])));
     expect(game.completedAchievements).toEqual([]);
+    expect(game.resolvedEventIds).toEqual([]);
     expect(game.endingId).toBeNull();
     expect(game.log[0]).toContain("沈一创办了公司");
   });

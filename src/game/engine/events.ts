@@ -31,6 +31,9 @@ export function resolveEventChoice(game: GameState, event: GameEvent, choiceId: 
   return {
     ...game,
     metrics,
+    resolvedEventIds: game.resolvedEventIds.includes(event.id)
+      ? game.resolvedEventIds
+      : [...game.resolvedEventIds, event.id],
     log: [...game.log, `${event.title}：${choice.log}`],
   };
 }

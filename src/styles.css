@@ -265,6 +265,32 @@ dd {
   width: 100%;
 }
 
+.secondary-button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #b9c5bd;
+  border-radius: 6px;
+  color: #33433c;
+  display: inline-flex;
+  font-size: 0.84rem;
+  font-weight: 800;
+  gap: 6px;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.secondary-button:hover {
+  background: #e7f3ed;
+  border-color: #288b5b;
+  color: #1f6f4a;
+}
+
+.reset-button {
+  justify-self: stretch;
+  width: 100%;
+}
+
 .create-panel .primary-button {
   margin-top: 20px;
 }
@@ -519,6 +545,14 @@ dd {
   padding-top: 14px;
 }
 
+.game-over-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .ending-description {
   color: #33433c;
   font-size: 1rem;
@@ -557,6 +591,10 @@ dd {
   .dashboard-title {
     align-items: stretch;
     display: grid;
+  }
+
+  .game-over-actions {
+    justify-content: flex-start;
   }
 
   .dashboard-icons {

@@ -58,6 +58,7 @@ export function createNewGame(input: NewGameInput): GameState {
     investorRelations: Object.fromEntries(INVESTOR_IDS.map((id) => [id, 0])) as GameState["investorRelations"],
     factionRelations: Object.fromEntries(FACTION_IDS.map((id) => [id, 0])) as GameState["factionRelations"],
     completedAchievements: [],
+    resolvedEventIds: [],
     endingId: null,
     log: [`${input.founderName}创办了公司，投资人说这个方向“空间很大”。`],
   };

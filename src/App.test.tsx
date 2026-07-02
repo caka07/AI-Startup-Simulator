@@ -1,10 +1,55 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
+import { createNewGame } from "./game/engine/createGame";
+import { getEligibleEvents } from "./game/engine/events";
+import { loadGame, saveGame } from "./game/engine/persistence";
+import { advanceGameTurn } from "./game/engine/turn";
+import type { GameState } from "./game/types";
 
 import "@testing-library/jest-dom/vitest";
 
 describe("App", () => {
+  function installMemoryStorage(): Storage {
+    const values = new Map<string, string>();
+    const storage: Storage = {
+      get length() {
+        return values.size;
+      },
+      clear: () => values.clear(),
+      getItem: (key) => values.get(key) ?? null,
+      key: (index) => Array.from(values.keys())[index] ?? null,
+      removeItem: (key) => {
+        values.delete(key);
+      },
+      setItem: (key, value) => {
+        values.set(key, value);
+      },
+    };
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: storage,
+    });
+    return storage;
+  }
+
+  function createSavedGame(overrides: Partial<GameState> = {}) {
+    return {
+      ...createNewGame({
+        seed: 20260630,
+        founderName: "存档创始人",
+        backgroundId: "serial-founder",
+        trackId: "ai-agent",
+        attributes: { tech: 5, sales: 6, fundraising: 7, management: 4, ethics: 3, stamina: 4, hype: 6, luck: 3 },
+      }),
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    installMemoryStorage();
+  });
+
   function startGame() {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
@@ -28,6 +73,7 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "2026 Q1" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "本季度动作" })).toBeInTheDocument();
+    expect(loadGame()?.founder.name).toBe("沈一");
   });
 
   it("requires exactly two actions and resets selected actions after advancing", () => {
@@ -47,6 +93,7 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "2026 Q2" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Build Product/ })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: /Train Model/ })).not.toBeChecked();
+    expect(loadGame()?.quarter).toBe(2);
   });
 
   it("returns to the action flow after resolving one event when multiple events are eligible", () => {
@@ -62,6 +109,7 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "本季度动作" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Enterprise Churn Scare" })).not.toBeInTheDocument();
+    expect(loadGame()?.metrics.grossMargin).toBe(39);
   });
 
   it("does not show a resolved event again on the next quarter", () => {
@@ -102,5 +150,55 @@ describe("App", () => {
     const employeeRow = screen.getByRole("row", { name: /Researcher 1/ });
     expect(within(employeeRow).getByText("Researcher")).toBeInTheDocument();
     expect(within(employeeRow).getAllByText(/\d+%/).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("loads a saved active game and can reset it during play", () => {
+    saveGame(createSavedGame({ year: 2027, quarter: 3 }));
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "2027 Q3" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "重置存档" }));
+
+    expect(screen.getByRole("heading", { name: "创建创始人" })).toBeInTheDocument();
+    expect(loadGame()).toBeNull();
+  });
+
+  it("renders a saved ended game and can reset it from game over", () => {
+    saveGame(createSavedGame({ endingId: "cashflow-break" }));
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Cashflow Break" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "重置存档" }));
+
+    expect(screen.getByRole("heading", { name: "创建创始人" })).toBeInTheDocument();
+    expect(loadGame()).toBeNull();
+  });
+
+  it("restores a pending event prompt from a saved game after reload", () => {
+    saveGame(advanceGameTurn(createSavedGame(), ["sell", "build-product"]));
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Sales Promised Private Deployment" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "本季度动作" })).not.toBeInTheDocument();
+  });
+
+  it("shows the action panel when a saved eligible event was already resolved", () => {
+    const saved = advanceGameTurn(createSavedGame(), ["sell", "build-product"]);
+    const resolvedEventIds = getEligibleEvents(saved).map((event) => event.id);
+    expect(resolvedEventIds).toContain("sales-promised-private-deployment");
+    saveGame({
+      ...saved,
+      resolvedEventIds,
+    });
+
+    render(<App />);
+
+    expect(screen.queryByRole("heading", { name: "Sales Promised Private Deployment" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "本季度动作" })).toBeInTheDocument();
   });
 });

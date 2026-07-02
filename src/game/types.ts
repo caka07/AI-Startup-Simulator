@@ -152,6 +152,7 @@ export interface GameState {
   investorRelations: Record<InvestorId, number>;
   factionRelations: Record<FactionId, number>;
   completedAchievements: AchievementId[];
+  resolvedEventIds: EventId[];
   endingId: EndingId | null;
   log: string[];
 }
