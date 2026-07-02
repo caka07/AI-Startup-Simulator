@@ -40,7 +40,7 @@ export function FinancingPanel({ game }: FinancingPanelProps) {
           <p className="eyebrow">融资窗口</p>
           <h2>
             <Landmark aria-hidden="true" size={20} />
-            Financing
+            融资
           </h2>
         </div>
         <span className={`status-pill ${termTone(evaluation.termStyle)}`}>{evaluation.termStyle}</span>

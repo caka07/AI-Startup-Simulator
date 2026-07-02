@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../src/game/engine/createGame";
-import { getEligibleEvents, matchesAll, matchesCondition, resolveEventChoice } from "../../src/game/engine/events";
+import { getEligibleEvents, matchesAll, matchesCondition, pickNextEvent, resolveEventChoice } from "../../src/game/engine/events";
 import type { Condition, GameState, NewGameInput } from "../../src/game/types";
 
 const input: NewGameInput = {
@@ -86,5 +86,16 @@ describe("events", () => {
     if (!event) throw new Error("Missing DeepDuck event fixture");
 
     expect(resolveEventChoice(game, event, "missing-choice")).toBe(game);
+  });
+
+  it("picks an unresolved eligible event with deterministic rotation", () => {
+    const game = gameWithMetrics({ valuation: 25_000_000, arr: 800_000, reputation: 40 });
+    const first = pickNextEvent(game);
+    if (!first) throw new Error("Expected at least one eligible event");
+
+    const second = pickNextEvent({ ...game, resolvedEventIds: [first.id] });
+
+    expect(second).not.toBeNull();
+    expect(second?.id).not.toBe(first.id);
   });
 });

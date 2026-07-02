@@ -3,8 +3,8 @@ import type { PlayerAction } from "../types";
 export const actions = [
   {
     id: "build-product",
-    name: "Build Product",
-    description: "Ship less glamorous workflows that customers actually renew.",
+    name: "研发产品",
+    description: "把不性感但客户会续费的流程真正做完。",
     effects: [
       { metric: "productQuality", delta: 5 },
       { metric: "pmf", delta: 3 },
@@ -14,8 +14,8 @@ export const actions = [
   },
   {
     id: "train-model",
-    name: "Train Model",
-    description: "Spend GPU credits to make the benchmark slide less embarrassing.",
+    name: "训练模型",
+    description: "烧掉 GPU 点数，让 Benchmark 幻灯片没那么尴尬。",
     effects: [
       { metric: "modelPower", delta: 6 },
       { metric: "computeCost", delta: 4 },
@@ -25,8 +25,8 @@ export const actions = [
   },
   {
     id: "sell",
-    name: "Sell",
-    description: "Convert introductions, dinners, and anxiety into invoices.",
+    name: "冲销售",
+    description: "把介绍、饭局和焦虑转换成发票。",
     effects: [
       { metric: "mrr", delta: 80_000 },
       { metric: "arr", delta: 800_000 },
@@ -36,8 +36,8 @@ export const actions = [
   },
   {
     id: "fundraise",
-    name: "Fundraise",
-    description: "Tell the same inevitable story until someone wires money.",
+    name: "融资",
+    description: "把同一个必然成功的故事讲到有人打钱。",
     effects: [
       { metric: "cash", delta: 3_000_000 },
       { metric: "valuation", delta: 5_000_000 },
@@ -48,8 +48,8 @@ export const actions = [
   },
   {
     id: "hire",
-    name: "Hire",
-    description: "Add talent, payroll, and new ways to disagree in Slack.",
+    name: "招聘",
+    description: "增加人才、工资单，以及新的争论方式。",
     effects: [
       { metric: "productQuality", delta: 3 },
       { metric: "modelPower", delta: 2 },
@@ -59,8 +59,8 @@ export const actions = [
   },
   {
     id: "retain",
-    name: "Retain",
-    description: "Spend cash and attention so the team stops updating resumes.",
+    name: "稳住团队",
+    description: "花钱和注意力，让团队暂时停止更新简历。",
     effects: [
       { metric: "morale", delta: 7 },
       { metric: "founderEquity", delta: -2 },
@@ -70,8 +70,8 @@ export const actions = [
   },
   {
     id: "govern-compliance",
-    name: "Govern Compliance",
-    description: "Write policies before a regulator writes your product roadmap.",
+    name: "治理合规",
+    description: "在监管替你写产品路线图之前，先把制度写好。",
     effects: [
       { metric: "complianceRisk", delta: -8 },
       { metric: "globalReadiness", delta: 4 },
@@ -81,8 +81,8 @@ export const actions = [
   },
   {
     id: "expand-global",
-    name: "Expand Global",
-    description: "Localize, travel, and learn that every market has a different impossible requirement.",
+    name: "全球扩张",
+    description: "本地化、出差，然后发现每个市场都有不同的不可能要求。",
     effects: [
       { metric: "globalReadiness", delta: 7 },
       { metric: "arr", delta: 600_000 },
@@ -92,8 +92,8 @@ export const actions = [
   },
   {
     id: "pr-launch",
-    name: "PR Launch",
-    description: "Buy attention and hope the product survives it.",
+    name: "公关发布",
+    description: "买来注意力，并祈祷产品扛得住。",
     effects: [
       { metric: "reputation", delta: 7 },
       { metric: "marketHeat", delta: 4 },
@@ -103,8 +103,8 @@ export const actions = [
   },
   {
     id: "cut-costs",
-    name: "Cut Costs",
-    description: "Extend runway by making everyone refresh job boards in private.",
+    name: "削减成本",
+    description: "用让所有人偷偷刷招聘软件的方式延长 Runway。",
     effects: [
       { metric: "runway", delta: 3 },
       { metric: "cash", delta: 500_000 },

@@ -37,7 +37,7 @@ export function EmployeeOperationPanel({ game, selectedOperation, onSelect }: Em
       </div>
 
       {game.employees.length === 0 ? (
-        <p className="empty-state">还没有员工。选择 Hire 后，这里会出现加薪、期权、PUA、放假和裁员操作。</p>
+        <p className="empty-state">还没有员工。选择“招聘”后，这里会出现加薪、期权、PUA、放假和裁员操作。</p>
       ) : (
         <div className="employee-operation-list">
           {employeeOperations.map((operation) => {

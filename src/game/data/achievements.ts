@@ -5,9 +5,9 @@ export const achievements = [
     id: "hello-demo",
     name: "第一版 Demo",
     description: "产品终于能撑过一次截图，群聊里开始有人转发。",
-    conditionText: "产品质量 >= 30",
+    conditionText: "产品质量 >= 35",
     tier: "普通",
-    trigger: [{ metric: "productQuality", op: ">=", value: 30 }],
+    trigger: [{ metric: "productQuality", op: ">=", value: 35 }],
   },
   {
     id: "first-invoice",

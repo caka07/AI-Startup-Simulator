@@ -2,7 +2,7 @@ import { useState } from "react";
 import { RotateCcw, Trophy } from "lucide-react";
 import type { ActionId, EmployeeOperationId, GameEvent, GameState, NewGameInput } from "./game/types";
 import { createNewGame } from "./game/engine/createGame";
-import { getEligibleEvents } from "./game/engine/events";
+import { pickNextEvent } from "./game/engine/events";
 import { clearGame, loadGame, saveGame } from "./game/engine/persistence";
 import { advanceGameTurn, resolveGameEventChoice } from "./game/engine/turn";
 import { CreateFounder } from "./game/ui/CreateFounder";
@@ -22,17 +22,11 @@ interface AppState {
   activeEvent: GameEvent | null;
 }
 
-function pickActiveEvent(nextGame: GameState): GameEvent | null {
-  if (nextGame.endingId) return null;
-  const resolvedIds = new Set(nextGame.resolvedEventIds);
-  return getEligibleEvents(nextGame).find((event) => !resolvedIds.has(event.id)) ?? null;
-}
-
 function createInitialAppState(): AppState {
   const game = loadGame();
   return {
     game,
-    activeEvent: game ? pickActiveEvent(game) : null,
+    activeEvent: game ? pickNextEvent(game) : null,
   };
 }
 
@@ -61,7 +55,7 @@ export function App() {
   function applyTurn(actions: ActionId[]) {
     if (!game) return;
     const next = advanceGameTurn(game, actions, selectedEmployeeOperation ?? undefined);
-    saveAndSetGame(next, pickActiveEvent(next));
+    saveAndSetGame(next, pickNextEvent(next));
   }
 
   function chooseEvent(choiceId: string) {

@@ -59,7 +59,7 @@ describe("advanceQuarter", () => {
     expect(next.metrics.modelPower).toBe(originalMetrics.modelPower);
     expect(next.metrics.computeCost).toBe(originalMetrics.computeCost);
     expect(next.metrics.cash).toBe(originalMetrics.cash);
-    expect(next.log.slice(originalLog.length)).toEqual(["执行行动：build-product", "执行行动：sell"]);
+    expect(next.log.slice(originalLog.length)).toEqual(["执行行动：研发产品", "执行行动：冲销售"]);
     expect(next.log).toHaveLength(originalLog.length + 2);
     expect(next.year).toBe(2026);
     expect(next.quarter).toBe(2);

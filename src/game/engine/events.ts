@@ -19,6 +19,15 @@ export function getEligibleEvents(game: GameState): GameEvent[] {
   return events.filter((event) => matchesAll(game, event.trigger));
 }
 
+export function pickNextEvent(game: GameState): GameEvent | null {
+  if (game.endingId) return null;
+  const resolvedIds = new Set(game.resolvedEventIds);
+  const candidates = getEligibleEvents(game).filter((event) => !resolvedIds.has(event.id));
+  if (candidates.length === 0) return null;
+  const offset = Math.abs(game.seed + game.year * 4 + game.quarter * 17 + game.resolvedEventIds.length * 31);
+  return candidates[offset % candidates.length];
+}
+
 export function resolveEventChoice(game: GameState, event: GameEvent, choiceId: string): GameState {
   const choice = event.choices.find((item) => item.id === choiceId);
   if (!choice) return game;

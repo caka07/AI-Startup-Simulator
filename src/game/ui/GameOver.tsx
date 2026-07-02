@@ -39,12 +39,12 @@ export function GameOver({ game, onReset }: GameOverProps) {
             <p className="eyebrow">结局 / {game.endingId}</p>
             <h1>
               <EndingIcon aria-hidden="true" size={24} />
-              {ending?.name ?? "Unknown Ending"}
+              {ending?.name ?? "未知结局"}
             </h1>
           </div>
           <div className="game-over-actions">
             <span className={isSuccessEnding ? "status-pill success" : "status-pill warning"}>
-              {isSuccessEnding ? "Outcome" : "Closure"}
+              {isSuccessEnding ? "功成名就" : "落幕"}
             </span>
             <button className="secondary-button" onClick={onReset} type="button">
               <RotateCcw aria-hidden="true" size={16} />
@@ -53,7 +53,7 @@ export function GameOver({ game, onReset }: GameOverProps) {
           </div>
         </div>
 
-        <p className="ending-description">{ending?.description ?? "No ending details found."}</p>
+        <p className="ending-description">{ending?.description ?? "没有找到结局详情。"}</p>
 
         <dl className="final-metrics">
           <div>

@@ -32,7 +32,7 @@ export function EmployeePanel({ game }: EmployeePanelProps) {
       </div>
 
       {game.employees.length === 0 ? (
-        <p className="empty-state">尚未招聘。选择 Hire 后，团队风险会在这里显性化。</p>
+        <p className="empty-state">尚未招聘。选择“招聘”后，团队风险会在这里显性化。</p>
       ) : (
         <div className="table-wrap">
           <table>

@@ -3,8 +3,8 @@ import type { EmployeeRole } from "../types";
 export const employeeRoles = [
   {
     id: "researcher",
-    name: "Researcher",
-    description: "Pushes model quality while quietly attracting recruiter DMs from everyone richer.",
+    name: "研究员",
+    description: "提升模型质量，同时悄悄收到更有钱公司的猎头私信。",
     salaryBase: 900_000,
     strengths: [
       { metric: "modelPower", delta: 6 },
@@ -14,8 +14,8 @@ export const employeeRoles = [
   },
   {
     id: "engineer",
-    name: "Engineer",
-    description: "Turns notebooks into services and services into pager rotations.",
+    name: "工程师",
+    description: "把 Notebook 变成服务，再把服务变成值班表。",
     salaryBase: 650_000,
     strengths: [
       { metric: "productQuality", delta: 5 },
@@ -25,8 +25,8 @@ export const employeeRoles = [
   },
   {
     id: "product-manager",
-    name: "Product Manager",
-    description: "Translates founder prophecy into tickets customers may recognize.",
+    name: "产品经理",
+    description: "把创始人预言翻译成客户可能看得懂的需求。",
     salaryBase: 520_000,
     strengths: [
       { metric: "pmf", delta: 5 },
@@ -36,8 +36,8 @@ export const employeeRoles = [
   },
   {
     id: "sales",
-    name: "Sales",
-    description: "Finds budget owners and occasionally sells features engineering has only dreamed about.",
+    name: "销售",
+    description: "找到预算负责人，偶尔卖出工程团队只在梦里见过的功能。",
     salaryBase: 480_000,
     strengths: [
       { metric: "mrr", delta: 30_000 },
@@ -47,8 +47,8 @@ export const employeeRoles = [
   },
   {
     id: "compliance",
-    name: "Compliance",
-    description: "Adds process before regulators add headlines.",
+    name: "合规",
+    description: "在监管帮你上新闻之前，先把流程补上。",
     salaryBase: 500_000,
     strengths: [
       { metric: "complianceRisk", delta: -6 },
@@ -58,8 +58,8 @@ export const employeeRoles = [
   },
   {
     id: "finance",
-    name: "Finance",
-    description: "Explains why booked revenue and cash in bank are spiritually different.",
+    name: "财务",
+    description: "解释为什么确认收入和银行现金在灵魂上不是一回事。",
     salaryBase: 450_000,
     strengths: [
       { metric: "runway", delta: 1 },
@@ -70,7 +70,7 @@ export const employeeRoles = [
   {
     id: "cfo",
     name: "CFO",
-    description: "Turns chaos into board packets and invoices that survive diligence.",
+    description: "把混乱变成董事会材料，以及经得起尽调的发票。",
     salaryBase: 1_200_000,
     strengths: [
       { metric: "boardPressure", delta: -6 },
@@ -80,8 +80,8 @@ export const employeeRoles = [
   },
   {
     id: "overseas-bd",
-    name: "Overseas BD",
-    description: "Lives on planes, localizes demos, and discovers every country's procurement trap.",
+    name: "海外 BD",
+    description: "住在飞机上，本地化 Demo，并发现每个国家都有采购陷阱。",
     salaryBase: 700_000,
     strengths: [
       { metric: "globalReadiness", delta: 6 },

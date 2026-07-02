@@ -8,6 +8,7 @@ const ACTION_EFFECTS = Object.fromEntries(
     [...action.effects, { metric: "founderHealth", delta: -action.healthCost }],
   ]),
 ) as Record<ActionId, MetricEffect[]>;
+const ACTION_NAMES = Object.fromEntries(actions.map((action) => [action.id, action.name])) as Record<ActionId, string>;
 
 export function applyAction(game: GameState, action: ActionId): GameState {
   const effects = ACTION_EFFECTS[action];
@@ -19,6 +20,6 @@ export function applyAction(game: GameState, action: ActionId): GameState {
   return {
     ...game,
     metrics,
-    log: [...game.log, `执行行动：${action}`],
+    log: [...game.log, `执行行动：${ACTION_NAMES[action]}`],
   };
 }
