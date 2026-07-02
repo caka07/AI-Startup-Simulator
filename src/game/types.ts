@@ -96,6 +96,13 @@ export type EmployeeRoleId =
   | "cfo"
   | "overseas-bd";
 
+export type EmployeeOperationId =
+  | "raise-salary"
+  | "refresh-options"
+  | "pua-incentive"
+  | "vacation"
+  | "layoff";
+
 export type ActionId =
   | "build-product"
   | "train-model"

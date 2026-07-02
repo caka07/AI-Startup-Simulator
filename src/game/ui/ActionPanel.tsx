@@ -4,11 +4,14 @@ import { actions } from "../data/actions";
 import type { ActionId } from "../types";
 
 interface ActionPanelProps {
+  canSubmitExtra?: boolean;
   onSubmit: (actions: ActionId[]) => void;
+  submitHint?: string;
 }
 
-export function ActionPanel({ onSubmit }: ActionPanelProps) {
+export function ActionPanel({ canSubmitExtra = true, onSubmit, submitHint }: ActionPanelProps) {
   const [selected, setSelected] = useState<ActionId[]>([]);
+  const canSubmit = selected.length === 2 && canSubmitExtra;
 
   function toggle(actionId: ActionId) {
     setSelected((current) => {
@@ -19,7 +22,7 @@ export function ActionPanel({ onSubmit }: ActionPanelProps) {
   }
 
   function submit() {
-    if (selected.length !== 2) return;
+    if (!canSubmit) return;
     onSubmit(selected);
     setSelected([]);
   }
@@ -57,7 +60,9 @@ export function ActionPanel({ onSubmit }: ActionPanelProps) {
         })}
       </div>
 
-      <button className="primary-button panel-action" disabled={selected.length !== 2} onClick={submit} type="button">
+      {submitHint ? <p className="action-submit-hint">{submitHint}</p> : null}
+
+      <button className="primary-button panel-action" disabled={!canSubmit} onClick={submit} type="button">
         <Rocket aria-hidden="true" size={18} />
         推进季度
       </button>

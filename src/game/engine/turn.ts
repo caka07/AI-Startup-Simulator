@@ -1,11 +1,12 @@
 import { EMPLOYEE_ROLE_IDS } from "../constants";
 import { actions as playerActions } from "../data/actions";
-import type { ActionId, GameEvent, GameState } from "../types";
+import type { ActionId, EmployeeOperationId, GameEvent, GameState } from "../types";
 import { advanceQuarter } from "./advance";
 import { unlockAchievements } from "./achievements";
 import { applyMetricDelta } from "./clamp";
 import { evaluateEnding } from "./endings";
 import { hireEmployee } from "./employees";
+import { applyEmployeeOperation } from "./employeeOperations";
 import { resolveEventChoice } from "./events";
 import { executeFundraise } from "./finance";
 
@@ -26,7 +27,7 @@ function finalizeTurn(game: GameState): GameState {
   return ending ? { ...withAchievements, endingId: ending.id } : withAchievements;
 }
 
-export function advanceGameTurn(game: GameState, actions: ActionId[]): GameState {
+export function advanceGameTurn(game: GameState, actions: ActionId[], employeeOperationId?: EmployeeOperationId): GameState {
   const includesFundraise = actions.includes("fundraise");
   const genericActions = actions.filter((id) => id !== "fundraise");
   let next = advanceQuarter(game, genericActions);
@@ -37,6 +38,9 @@ export function advanceGameTurn(game: GameState, actions: ActionId[]): GameState
   if (includesFundraise) {
     next = applyActionHealthCost(next, "fundraise");
     next = executeFundraise(next);
+  }
+  if (employeeOperationId) {
+    next = applyEmployeeOperation(next, employeeOperationId);
   }
   return finalizeTurn(next);
 }

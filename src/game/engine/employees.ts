@@ -1,10 +1,15 @@
 import { employeeRoles } from "../data/employeeRoles";
 import type { Employee, EmployeeRole, EmployeeRoleId, GameState } from "../types";
 import { applyMetricDelta, clampMetric } from "./clamp";
+import { createRng } from "./rng";
 
 export type RetentionMove = "raise-salary" | "refresh-options" | "promote" | "vacation";
 
 const LEVEL_ORDER: Employee["level"][] = ["junior", "mid", "senior", "lead", "cxo"];
+const CHINESE_SURNAMES = ["沈", "林", "周", "陈", "许", "梁", "赵", "顾", "何", "陆", "唐", "秦"];
+const CHINESE_GIVEN_NAMES = ["序", "砚", "知微", "星河", "云起", "景明", "若川", "以航", "宁远", "见山", "念初", "清越"];
+const ENGLISH_FIRST_NAMES = ["Ava", "Maya", "Noah", "Ethan", "Iris", "Leo", "Nora", "Owen", "Riley", "Victor", "Zoe", "Miles"];
+const ENGLISH_LAST_NAMES = ["Chen", "Lin", "Wang", "Zhang", "Liu", "Park", "Singh", "Kim", "Patel", "Nguyen", "Morgan", "Taylor"];
 
 function clampPercent(value: number): number {
   return clampMetric("morale", value);
@@ -44,6 +49,19 @@ function tagsFor(role: EmployeeRole): string[] {
   return [...role.strengths.map((effect) => effect.metric), ...role.risks];
 }
 
+function generatedEmployeeName(game: GameState, role: EmployeeRoleId, employeeIndex: number): string {
+  const roleSalt = Array.from(role).reduce((total, char) => total + char.charCodeAt(0), 0);
+  const rng = createRng(game.seed + employeeIndex * 997 + roleSalt * 37);
+  if (rng.next() < 0.58) {
+    return `${CHINESE_SURNAMES[rng.int(0, CHINESE_SURNAMES.length - 1)]}${
+      CHINESE_GIVEN_NAMES[rng.int(0, CHINESE_GIVEN_NAMES.length - 1)]
+    }`;
+  }
+  return `${ENGLISH_FIRST_NAMES[rng.int(0, ENGLISH_FIRST_NAMES.length - 1)]} ${
+    ENGLISH_LAST_NAMES[rng.int(0, ENGLISH_LAST_NAMES.length - 1)]
+  }`;
+}
+
 function nextLevel(level: Employee["level"]): Employee["level"] {
   const index = LEVEL_ORDER.indexOf(level);
   return LEVEL_ORDER[Math.min(LEVEL_ORDER.length - 1, index + 1)];
@@ -60,7 +78,7 @@ export function hireEmployee(game: GameState, role: EmployeeRoleId): GameState {
   const scarcity = startingScarcity(roleData);
   const employee: Employee = {
     id: `employee-${employeeIndex}-${role}`,
-    name: `${roleData.name} ${employeeIndex}`,
+    name: generatedEmployeeName(game, role, employeeIndex),
     role,
     level: startingLevel(roleData),
     ability: startingAbility(roleData),

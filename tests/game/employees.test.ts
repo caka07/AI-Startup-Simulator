@@ -45,6 +45,16 @@ describe("employees", () => {
     expect(next.employees[0].id).toBe("employee-1-engineer");
   });
 
+  it("generates stable mixed employee names from seed and hire order", () => {
+    const firstRun = hireEmployee(game(), "researcher");
+    const secondRun = hireEmployee(game(), "researcher");
+    const nextHire = hireEmployee(firstRun, "engineer");
+
+    expect(firstRun.employees[0].name).toBe(secondRun.employees[0].name);
+    expect(firstRun.employees[0].name).not.toBe("Researcher 1");
+    expect(nextHire.employees[1].name).not.toBe(firstRun.employees[0].name);
+  });
+
   it("departure risk increases when morale is low and employee is tired", () => {
     const hired = hireEmployee(game(), "researcher");
     const employee = { ...hired.employees[0], fatigue: 90, loyalty: 20 };

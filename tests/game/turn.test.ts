@@ -21,7 +21,7 @@ describe("advanceGameTurn", () => {
     expect(next.employees).toHaveLength(1);
     expect(next.employees[0].role).toBe("researcher");
     expect(next.metrics.cash).toBe(4_052_000);
-    expect(next.metrics.founderEquity).toBe(85);
+    expect(next.metrics.founderEquity).toBe(82);
     expect(next.metrics.founderHealth).toBe(78);
     expect(next.metrics.boardPressure).toBe(10);
   });

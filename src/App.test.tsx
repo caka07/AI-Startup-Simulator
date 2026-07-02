@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 import { createNewGame } from "./game/engine/createGame";
 import { getEligibleEvents } from "./game/engine/events";
+import { hireEmployee } from "./game/engine/employees";
 import { loadGame, saveGame } from "./game/engine/persistence";
 import { advanceGameTurn } from "./game/engine/turn";
 import type { GameState } from "./game/types";
@@ -151,9 +152,31 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Fundraise/ }));
     fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
 
-    const employeeRow = screen.getByRole("row", { name: /Researcher 1/ });
+    const employeeRow = screen.getByRole("row", { name: /Researcher/ });
     expect(within(employeeRow).getByText("Researcher")).toBeInTheDocument();
     expect(within(employeeRow).getAllByText(/\d+%/).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("requires one employee operation when the company has employees", () => {
+    const withEmployee = hireEmployee(createSavedGame(), "engineer");
+    saveGame({
+      ...withEmployee,
+      resolvedEventIds: getEligibleEvents(withEmployee).map((event) => event.id),
+    });
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "员工季度操作" })).toBeInTheDocument();
+    const submit = screen.getByRole("button", { name: "推进季度" });
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /Build Product/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Sell/ }));
+    expect(submit).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /加薪留人/ }));
+    expect(submit).toBeEnabled();
+
+    fireEvent.click(submit);
+    expect(loadGame()?.log.some((entry) => entry.includes("员工操作"))).toBe(true);
   });
 
   it("loads a saved active game and can reset it during play", () => {
