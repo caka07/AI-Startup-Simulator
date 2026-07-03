@@ -26,4 +26,39 @@ describe("advanceGameTurn", () => {
     expect(next.metrics.founderHealth).toBeLessThan(game.metrics.founderHealth);
     expect(next.metrics.boardPressure).toBeGreaterThan(game.metrics.boardPressure);
   });
+
+  it("supports two company actions plus a paid extra action and founder action", () => {
+    const game = createTurnGame();
+    const next = advanceGameTurn(game, {
+      companyActions: ["build-product", "sell"],
+      extraCompanyAction: "train-model",
+      founderAction: "take-vacation",
+      employeeOperations: [],
+    });
+
+    expect(next.quarter).toBe(2);
+    expect(next.metrics.cash).toBeLessThan(game.metrics.cash);
+    expect(next.metrics.productQuality).toBeGreaterThan(game.metrics.productQuality);
+    expect(next.metrics.founderHealth).toBeGreaterThanOrEqual(game.metrics.founderHealth - 4);
+    expect(next.log.join(" ")).toContain("额外公司动作");
+    expect(next.log.join(" ")).toContain("创始人动作");
+  });
+
+  it("keeps employee operations optional", () => {
+    const hired = advanceGameTurn(createTurnGame(), { companyActions: ["hire", "build-product"], employeeOperations: [] });
+    const next = advanceGameTurn(hired, { companyActions: ["sell", "build-product"], employeeOperations: [] });
+
+    expect(next.employees).toHaveLength(1);
+    expect(next.quarter).toBe(3);
+  });
+
+  it("supports the legacy third-argument employee operation path", () => {
+    const hired = advanceGameTurn(createTurnGame(), ["hire", "build-product"]);
+    const employee = hired.employees[0];
+
+    const next = advanceGameTurn(hired, ["sell", "build-product"], "vacation");
+
+    expect(next.quarter).toBe(3);
+    expect(next.employees[0].fatigue).toBeLessThan(employee.fatigue);
+  });
 });

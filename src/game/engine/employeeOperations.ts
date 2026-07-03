@@ -81,28 +81,31 @@ function appendLog(game: GameState, line: string): GameState {
   };
 }
 
-export function applyEmployeeOperation(game: GameState, operationId: EmployeeOperationId): GameState {
-  if (game.employees.length === 0) return game;
-
+function applySharedEmployeeOperationToTarget(game: GameState, target: Employee, operationId: EmployeeOperationId): GameState {
   if (operationId === "raise-salary") {
-    const target = highestDepartureRiskEmployee(game);
     return appendLog(retainEmployee(game, target.id, "raise-salary"), `员工操作：给 ${target.name} 加薪留人。`);
   }
 
-  if (operationId === "refresh-options") {
-    const target = highestDepartureRiskEmployee(game);
-    const retained = retainEmployee(game, target.id, "refresh-options");
-    return appendLog(
-      applyEffects(retained, [
-        { metric: "founderEquity", delta: -1 },
-        { metric: "boardPressure", delta: 1 },
-      ]),
-      `员工操作：给 ${target.name} 刷新期权池。`,
-    );
+  const retained = retainEmployee(game, target.id, "refresh-options");
+  return appendLog(
+    applyEffects(retained, [
+      { metric: "founderEquity", delta: -1 },
+      { metric: "boardPressure", delta: 1 },
+    ]),
+    `员工操作：给 ${target.name} 刷新期权池。`,
+  );
+}
+
+function applyLegacyEmployeeOperationToTarget(
+  game: GameState,
+  target: Employee,
+  operationId: EmployeeOperationId,
+): GameState {
+  if (operationId === "raise-salary" || operationId === "refresh-options") {
+    return applySharedEmployeeOperationToTarget(game, target, operationId);
   }
 
   if (operationId === "vacation") {
-    const target = highestDepartureRiskEmployee(game);
     const retained = retainEmployee(game, target.id, "vacation");
     return appendLog(
       applyEffects(retained, [
@@ -114,7 +117,6 @@ export function applyEmployeeOperation(game: GameState, operationId: EmployeeOpe
   }
 
   if (operationId === "layoff") {
-    const target = highestCashPressureEmployee(game);
     return appendLog(
       applyEffects(
         {
@@ -133,7 +135,6 @@ export function applyEmployeeOperation(game: GameState, operationId: EmployeeOpe
     );
   }
 
-  const target = highestDepartureRiskEmployee(game);
   return appendLog(
     applyEffects(
       updateEmployee(game, target.id, (employee) => ({
@@ -151,4 +152,80 @@ export function applyEmployeeOperation(game: GameState, operationId: EmployeeOpe
     ),
     `员工操作：对 ${target.name} 进行 PUA 激励，产出上去了，人味下来了。`,
   );
+}
+
+function applySelectedEmployeeOperationToTarget(
+  game: GameState,
+  target: Employee,
+  operationId: EmployeeOperationId,
+): GameState {
+  if (operationId === "raise-salary" || operationId === "refresh-options") {
+    return applySharedEmployeeOperationToTarget(game, target, operationId);
+  }
+
+  if (operationId === "vacation") {
+    const retained = retainEmployee(game, target.id, "vacation");
+    return appendLog(
+      applyEffects(retained, [
+        { metric: "morale", delta: 2 },
+        { metric: "productQuality", delta: -1 },
+      ]),
+      `员工操作：让 ${target.name} 放假修整。`,
+    );
+  }
+
+  if (operationId === "layoff") {
+    return appendLog(
+      applyEffects(
+        { ...game, employees: game.employees.filter((employee) => employee.id !== target.id) },
+        [
+          { metric: "cash", delta: Math.round(target.salary * 0.35) },
+          { metric: "runway", delta: 1 },
+          { metric: "morale", delta: -8 },
+          { metric: "reputation", delta: -4 },
+        ],
+      ),
+      `员工操作：裁掉 ${target.name} 止血。`,
+    );
+  }
+
+  return appendLog(
+    applyEffects(
+      updateEmployee(game, target.id, (employee) => ({
+        ...employee,
+        fatigue: clampPercent(employee.fatigue + 18),
+        loyalty: clampPercent(employee.loyalty - 12),
+        ambition: clampPercent(employee.ambition + 5),
+      })),
+      [
+        { metric: "productQuality", delta: 3 },
+        { metric: "modelPower", delta: 2 },
+        { metric: "morale", delta: 1 },
+        { metric: "founderHealth", delta: -4 },
+      ],
+    ),
+    `员工操作：对 ${target.name} 进行 PUA 激励。`,
+  );
+}
+
+function targetForOperation(game: GameState, operationId: EmployeeOperationId): Employee {
+  if (operationId === "layoff") {
+    return highestCashPressureEmployee(game);
+  }
+  return highestDepartureRiskEmployee(game);
+}
+
+export function applyEmployeeOperation(game: GameState, operationId: EmployeeOperationId): GameState {
+  if (game.employees.length === 0) return game;
+  return applyLegacyEmployeeOperationToTarget(game, targetForOperation(game, operationId), operationId);
+}
+
+export function applyEmployeeOperationToEmployee(
+  game: GameState,
+  employeeId: string,
+  operationId: EmployeeOperationId,
+): GameState {
+  const target = game.employees.find((employee) => employee.id === employeeId);
+  if (!target) return game;
+  return applySelectedEmployeeOperationToTarget(game, target, operationId);
 }

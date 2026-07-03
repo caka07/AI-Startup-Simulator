@@ -105,6 +105,14 @@ export type EmployeeOperationId =
   | "vacation"
   | "layoff";
 
+export type FounderActionId =
+  | "deep-work"
+  | "investor-dinner"
+  | "customer-roadtrip"
+  | "take-vacation"
+  | "public-thread"
+  | "therapy";
+
 export type ActionId =
   | "build-product"
   | "train-model"
@@ -225,6 +233,11 @@ export interface EmployeeRole extends NamedContent<EmployeeRoleId> {
   risks: string[];
 }
 
+export interface FounderAction extends NamedContent<FounderActionId> {
+  effects: MetricEffect[];
+  attributeEffects: Partial<Record<FounderAttributeId, number>>;
+}
+
 export interface PlayerAction extends NamedContent<ActionId> {
   category: ActionCategory;
   risk: "low" | "medium" | "high" | "extreme";
@@ -232,6 +245,18 @@ export interface PlayerAction extends NamedContent<ActionId> {
   healthCost: number;
   efficiency: ActionEfficiencyRule;
   visibleSummary: string[];
+}
+
+export interface EmployeeOperationAssignment {
+  employeeId: string;
+  operationId: EmployeeOperationId;
+}
+
+export interface TurnSubmission {
+  companyActions: ActionId[];
+  extraCompanyAction?: ActionId | null;
+  founderAction?: FounderActionId | null;
+  employeeOperations?: EmployeeOperationAssignment[];
 }
 
 export interface ActionPreview {

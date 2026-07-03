@@ -6,6 +6,15 @@ function nextQuarter(year: number, quarter: Quarter): { year: number; quarter: Q
   return { year, quarter: (quarter + 1) as Quarter };
 }
 
+export function advanceQuarterClock(game: GameState): GameState {
+  const period = nextQuarter(game.year, game.quarter);
+  return {
+    ...game,
+    year: period.year,
+    quarter: period.quarter,
+  };
+}
+
 export function advanceQuarter(game: GameState, actions: ActionId[]): GameState {
   const selected = actions.slice(0, 2);
   let next: GameState = {
@@ -18,10 +27,5 @@ export function advanceQuarter(game: GameState, actions: ActionId[]): GameState 
     next = applyAction(next, action);
   }
 
-  const period = nextQuarter(next.year, next.quarter);
-  return {
-    ...next,
-    year: period.year,
-    quarter: period.quarter,
-  };
+  return advanceQuarterClock(next);
 }
