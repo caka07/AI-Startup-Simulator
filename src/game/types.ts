@@ -60,6 +60,8 @@ export type TrackId =
   | "manufacturing-ai"
   | "local-life-agent";
 
+export type AttributePresetId = "operator" | "researcher" | "rainmaker" | "global";
+
 export type MarketId = "china" | "sea" | "middle-east" | "europe" | "us";
 
 export type FactionId =
@@ -169,7 +171,8 @@ export interface NewGameInput {
   founderName: string;
   backgroundId: BackgroundId;
   trackId: TrackId;
-  attributes: FounderAttributes;
+  presetId?: AttributePresetId;
+  attributes?: FounderAttributes;
 }
 
 export interface MetricEffect {

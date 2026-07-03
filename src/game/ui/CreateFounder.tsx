@@ -10,7 +10,14 @@ import {
   findTrackProfile,
   trackProfiles,
 } from "../data/founderProfiles";
-import type { BackgroundId, FounderAttributeId, FounderAttributes, NewGameInput, TrackId } from "../types";
+import type {
+  AttributePresetId,
+  BackgroundId,
+  FounderAttributeId,
+  FounderAttributes,
+  NewGameInput,
+  TrackId,
+} from "../types";
 
 interface CreateFounderProps {
   onStart: (input: NewGameInput) => void;
@@ -18,6 +25,17 @@ interface CreateFounderProps {
 
 function attributeTotal(attributes: FounderAttributes): number {
   return ATTRIBUTE_IDS.reduce((total, id) => total + attributes[id], 0);
+}
+
+const presetAttributes: Record<AttributePresetId, FounderAttributes> = {
+  operator: { tech: 3, sales: 3, fundraising: 4, management: 3, ethics: 3, stamina: 3, hype: 3, luck: 2 },
+  researcher: { tech: 5, sales: 2, fundraising: 2, management: 2, ethics: 4, stamina: 3, hype: 2, luck: 4 },
+  rainmaker: { tech: 2, sales: 4, fundraising: 5, management: 3, ethics: 2, stamina: 3, hype: 4, luck: 1 },
+  global: { tech: 4, sales: 3, fundraising: 3, management: 2, ethics: 4, stamina: 4, hype: 2, luck: 2 },
+};
+
+function isAttributePresetId(id: string): id is AttributePresetId {
+  return id in presetAttributes;
 }
 
 export function CreateFounder({ onStart }: CreateFounderProps) {
@@ -46,7 +64,7 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
     const preset = attributePresets.find((item) => item.id === id);
     if (!preset) return;
     setPresetId(id);
-    setAttributes(preset.attributes);
+    setAttributes(presetAttributes[preset.id]);
   }
 
   function updateAttribute(id: FounderAttributeId, value: number) {
@@ -57,11 +75,13 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canStart) return;
+    const selectedPresetId = isAttributePresetId(presetId) ? presetId : undefined;
     onStart({
       seed: 20260702,
       founderName: founderName.trim(),
       backgroundId,
       trackId,
+      ...(selectedPresetId ? { presetId: selectedPresetId } : {}),
       attributes,
     });
   }

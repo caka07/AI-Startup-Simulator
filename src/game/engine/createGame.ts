@@ -1,8 +1,8 @@
 import { BALANCE } from "../balance";
 import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS } from "../constants";
-import { findBackgroundProfile, findTrackProfile } from "../data/founderProfiles";
 import type { CompanyMetrics, GameState, MarketState, MetricEffect, NewGameInput } from "../types";
 import { applyMetricDelta } from "./clamp";
+import { deriveFounderAttributes, deriveFounderMetricEffects } from "./founderStart";
 
 function createInitialMetrics(): CompanyMetrics {
   return {
@@ -48,12 +48,12 @@ function applyEffects(metrics: CompanyMetrics, effects: MetricEffect[]): Company
 }
 
 function createProfiledMetrics(input: NewGameInput): CompanyMetrics {
-  const background = findBackgroundProfile(input.backgroundId);
-  const track = findTrackProfile(input.trackId);
-  return applyEffects(applyEffects(createInitialMetrics(), background?.metricEffects ?? []), track?.metricEffects ?? []);
+  return applyEffects(createInitialMetrics(), deriveFounderMetricEffects(input));
 }
 
 export function createNewGame(input: NewGameInput): GameState {
+  const attributes = deriveFounderAttributes(input);
+
   return {
     seed: input.seed,
     year: BALANCE.startYear,
@@ -62,7 +62,7 @@ export function createNewGame(input: NewGameInput): GameState {
       name: input.founderName,
       backgroundId: input.backgroundId,
       trackId: input.trackId,
-      attributes: input.attributes,
+      attributes,
     },
     metrics: createProfiledMetrics(input),
     employees: [],

@@ -44,7 +44,7 @@ describe("createNewGame", () => {
       runway: 12,
       arr: 0,
       mrr: 0,
-      pmf: 31,
+      pmf: 33,
       modelPower: 25,
       productQuality: 32,
       computeSupply: 35,
@@ -52,7 +52,7 @@ describe("createNewGame", () => {
       grossMargin: 35,
       techDebt: 19,
       reputation: 30,
-      morale: 60,
+      morale: 63,
       complianceRisk: 20,
       globalReadiness: 10,
       boardPressure: 0,
@@ -140,5 +140,41 @@ describe("createNewGame", () => {
     expect(researcher.metrics.modelPower).toBeGreaterThan(pm.metrics.modelPower);
     expect(pm.metrics.productQuality).toBeGreaterThan(researcher.metrics.productQuality);
     expect(pm.metrics.arr).toBeGreaterThan(researcher.metrics.arr);
+  });
+
+  it("combines background, track, and preset into final founder attributes", () => {
+    const researcherModel = createNewGame({
+      seed: 42,
+      founderName: "沈一",
+      backgroundId: "former-llm-researcher",
+      trackId: "foundation-model",
+      presetId: "researcher",
+    });
+    const salesAgent = createNewGame({
+      seed: 42,
+      founderName: "沈一",
+      backgroundId: "ex-bigtech-pm",
+      trackId: "local-life-agent",
+      presetId: "rainmaker",
+    });
+
+    expect(researcherModel.founder.attributes.tech).toBeGreaterThan(salesAgent.founder.attributes.tech);
+    expect(salesAgent.founder.attributes.sales).toBeGreaterThan(researcherModel.founder.attributes.sales);
+    expect(researcherModel.metrics.modelPower).toBeGreaterThan(salesAgent.metrics.modelPower);
+    expect(salesAgent.metrics.mrr).toBeGreaterThan(researcherModel.metrics.mrr);
+  });
+
+  it("allows strong starts above the old 24 point total", () => {
+    const game = createNewGame({
+      seed: 42,
+      founderName: "超配创始人",
+      backgroundId: "serial-founder",
+      trackId: "finance-ai",
+      presetId: "rainmaker",
+    });
+    const total = Object.values(game.founder.attributes).reduce((sum, value) => sum + value, 0);
+
+    expect(total).toBeGreaterThan(24);
+    expect(game.metrics.arr).toBeGreaterThan(0);
   });
 });
