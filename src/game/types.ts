@@ -115,7 +115,17 @@ export type ActionId =
   | "govern-compliance"
   | "expand-global"
   | "pr-launch"
-  | "cut-costs";
+  | "cut-costs"
+  | "publish-paper"
+  | "buy-compute"
+  | "open-source-model"
+  | "security-audit"
+  | "poach-researcher"
+  | "academic-fraud"
+  | "gray-data-deal"
+  | "inflate-arr";
+
+export type ActionCategory = "research" | "product" | "commercial" | "finance" | "people" | "global" | "risk";
 
 export type AchievementId = string;
 export type EndingId = string;
@@ -180,6 +190,11 @@ export interface MetricEffect {
   delta: number;
 }
 
+export interface ActionEfficiencyRule {
+  attributes?: Partial<Record<FounderAttributeId, number>>;
+  metrics?: Partial<Record<MetricId, number>>;
+}
+
 export interface Condition {
   metric: MetricId;
   op: ">=" | ">" | "<=" | "<" | "===";
@@ -211,8 +226,19 @@ export interface EmployeeRole extends NamedContent<EmployeeRoleId> {
 }
 
 export interface PlayerAction extends NamedContent<ActionId> {
+  category: ActionCategory;
+  risk: "low" | "medium" | "high" | "extreme";
   effects: MetricEffect[];
   healthCost: number;
+  efficiency: ActionEfficiencyRule;
+  visibleSummary: string[];
+}
+
+export interface ActionPreview {
+  actionId: ActionId;
+  efficiencyMultiplier: number;
+  effects: MetricEffect[];
+  summary: string[];
 }
 
 export interface GameEventChoice {

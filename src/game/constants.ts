@@ -54,6 +54,14 @@ export const ACTION_IDS: ActionId[] = [
   "expand-global",
   "pr-launch",
   "cut-costs",
+  "publish-paper",
+  "buy-compute",
+  "open-source-model",
+  "security-audit",
+  "poach-researcher",
+  "academic-fraud",
+  "gray-data-deal",
+  "inflate-arr",
 ];
 
 export const EMPLOYEE_ROLE_IDS: EmployeeRoleId[] = [

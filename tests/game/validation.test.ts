@@ -187,6 +187,47 @@ describe("content validation", () => {
     expect(result.errors).toContain("actions/build-product has missing or invalid effects");
   });
 
+  it("rejects missing action metadata without throwing", () => {
+    const tables = contentTables();
+    delete (tables.actions[0] as Partial<PlayerAction>).efficiency;
+    delete (tables.actions[0] as Partial<PlayerAction>).visibleSummary;
+
+    expect(() => validateContentTables(tables)).not.toThrow();
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("actions/build-product has missing or invalid efficiency");
+    expect(result.errors).toContain("actions/build-product has missing or invalid visibleSummary");
+  });
+
+  it("rejects malformed action metadata", () => {
+    const tables = contentTables();
+    tables.actions[0].category = "chaos" as PlayerAction["category"];
+    tables.actions[0].risk = "unsafe" as PlayerAction["risk"];
+    tables.actions[0].healthCost = Number.NaN;
+    tables.actions[0].visibleSummary = ["", "产品质量↑"];
+
+    const result = validateContentTables(tables);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("actions/build-product has invalid category: chaos");
+    expect(result.errors).toContain("actions/build-product has invalid risk: unsafe");
+    expect(result.errors).toContain("actions/build-product has non-finite healthCost");
+    expect(result.errors).toContain("actions/build-product has invalid visibleSummary item");
+  });
+
+  it("rejects invalid action efficiency keys and weights", () => {
+    const tables = contentTables();
+    tables.actions[0].efficiency = {
+      attributes: { tech: Number.NaN, shadow: 0.5 } as PlayerAction["efficiency"]["attributes"],
+      metrics: { cash: Number.POSITIVE_INFINITY, mystery: 0.2 } as PlayerAction["efficiency"]["metrics"],
+    };
+
+    const errors = validateContentTables(tables).errors;
+    expect(errors).toContain("actions/build-product references unknown efficiency attribute: shadow");
+    expect(errors).toContain("actions/build-product has non-finite efficiency attribute weight: tech");
+    expect(errors).toContain("actions/build-product references unknown efficiency metric: mystery");
+    expect(errors).toContain("actions/build-product has non-finite efficiency metric weight: cash");
+  });
+
   it("rejects missing event choice effects without throwing", () => {
     const tables = contentTables();
     delete (tables.events[0].choices[0] as Partial<GameEvent["choices"][number]>).effects;

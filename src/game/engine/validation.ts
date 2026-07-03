@@ -122,6 +122,9 @@ const REQUIRED_ENDING_IDS = [
 ];
 
 const ALLOWED_CONDITION_OPERATORS = [">=", ">", "<=", "<", "==="];
+const ALLOWED_ACTION_CATEGORIES = ["research", "product", "commercial", "finance", "people", "global", "risk"];
+const ALLOWED_ACTION_RISKS = ["low", "medium", "high", "extreme"];
+const FOUNDER_ATTRIBUTE_IDS = ["tech", "sales", "fundraising", "management", "ethics", "stamina", "hype", "luck"];
 
 function validateExactIds(label: string, ids: string[], requiredIds: readonly string[], errors: string[]) {
   const seen = new Set<string>();
@@ -182,6 +185,58 @@ function validateEffectList(owner: string, label: string, effects: unknown, erro
     return;
   }
   effects.forEach((effect) => validateEffect(owner, effect, errors));
+}
+
+function validateEfficiencyMap(
+  owner: string,
+  label: "attribute" | "metric",
+  values: unknown,
+  allowedIds: readonly string[],
+  errors: string[],
+) {
+  if (values === undefined) return;
+  if (!isRecord(values)) {
+    errors.push(`${owner} has invalid efficiency ${label}s`);
+    return;
+  }
+  for (const [id, weight] of Object.entries(values)) {
+    if (!allowedIds.includes(id)) {
+      errors.push(`${owner} references unknown efficiency ${label}: ${id}`);
+    }
+    if (typeof weight !== "number" || !Number.isFinite(weight)) {
+      errors.push(`${owner} has non-finite efficiency ${label} weight: ${id}`);
+    }
+  }
+}
+
+function validateActionMetadata(action: PlayerAction, errors: string[]) {
+  const owner = `actions/${action.id}`;
+  if (typeof action.category !== "string" || !ALLOWED_ACTION_CATEGORIES.includes(action.category)) {
+    errors.push(`${owner} has invalid category: ${action.category}`);
+  }
+  if (typeof action.risk !== "string" || !ALLOWED_ACTION_RISKS.includes(action.risk)) {
+    errors.push(`${owner} has invalid risk: ${action.risk}`);
+  }
+  if (typeof action.healthCost !== "number" || !Number.isFinite(action.healthCost)) {
+    errors.push(`${owner} has non-finite healthCost`);
+  }
+
+  if (!isRecord(action.efficiency)) {
+    errors.push(`${owner} has missing or invalid efficiency`);
+  } else {
+    validateEfficiencyMap(owner, "attribute", action.efficiency.attributes, FOUNDER_ATTRIBUTE_IDS, errors);
+    validateEfficiencyMap(owner, "metric", action.efficiency.metrics, METRIC_IDS, errors);
+  }
+
+  if (!Array.isArray(action.visibleSummary) || action.visibleSummary.length === 0) {
+    errors.push(`${owner} has missing or invalid visibleSummary`);
+  } else {
+    for (const item of action.visibleSummary) {
+      if (typeof item !== "string" || item.length === 0) {
+        errors.push(`${owner} has invalid visibleSummary item`);
+      }
+    }
+  }
 }
 
 function validateTriggeredContent(owner: string, items: Array<GameEvent | Achievement | Ending>, errors: string[]) {
@@ -298,6 +353,7 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
     validateEffectList(`employeeRoles/${role.id}`, "strengths", role.strengths, errors);
   }
   for (const action of tables.actions) {
+    validateActionMetadata(action, errors);
     validateEffectList(`actions/${action.id}`, "effects", action.effects, errors);
   }
 
