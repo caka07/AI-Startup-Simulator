@@ -239,6 +239,7 @@ describe("App", () => {
 
     expect(screen.getByRole("dialog", { name: "成就" })).toBeInTheDocument();
     expect(screen.getAllByText("???").length).toBeGreaterThan(0);
+    expect(screen.queryByText("敲钟的人")).not.toBeInTheDocument();
     expect(screen.getAllByText(/MRR/).length).toBeGreaterThan(0);
   });
 

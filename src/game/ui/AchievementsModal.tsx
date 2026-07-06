@@ -30,10 +30,11 @@ export function AchievementsModal({ game, onClose }: AchievementsModalProps) {
         <div className="achievement-modal-list">
           {achievements.map((achievement) => {
             const unlocked = completed.has(achievement.id);
+            const hiddenLocked = achievement.hiddenCondition && !unlocked;
             return (
               <article className={unlocked ? "achievement-row unlocked" : "achievement-row"} key={achievement.id}>
                 <div>
-                  <strong>{achievement.name}</strong>
+                  <strong>{hiddenLocked ? "???" : achievement.name}</strong>
                   <span>{unlocked ? achievement.description : achievement.conditionText}</span>
                 </div>
                 <em className={unlocked ? "status-pill success" : "status-pill neutral"}>
