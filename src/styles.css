@@ -1,4 +1,6 @@
 :root {
+  --border: #2c323c;
+  --muted: #8d99aa;
   color: #f5f7fa;
   background: #050608;
   font-family:
@@ -451,6 +453,12 @@ th {
   font-weight: 800;
 }
 
+.metric-label[title] {
+  cursor: help;
+  text-decoration: underline dotted rgba(255, 255, 255, 0.28);
+  text-underline-offset: 3px;
+}
+
 .metric-cell strong,
 dd {
   color: #ffffff;
@@ -515,6 +523,13 @@ dd {
   font-size: 0.86rem;
 }
 
+.effect-list {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
 .action-submit-hint,
 .event-trigger {
   background: rgba(255, 190, 92, 0.12);
@@ -531,16 +546,51 @@ dd {
   margin-top: 0;
 }
 
+.extra-action-toggle {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-top: 12px;
+}
+
+.leaderboard-tabs,
+.leaderboard-categories {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.leaderboard-categories .secondary-button.selected,
+.leaderboard-categories .secondary-button[aria-pressed="true"] {
+  background: #151a23;
+  border-color: #ffffff;
+}
+
+.employee-assignment-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+}
+
 .employee-operation-option {
   align-items: center;
-  display: flex;
+  display: grid;
   gap: 10px;
-  justify-content: space-between;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) auto;
 }
 
 .employee-operation-option span {
   display: grid;
   gap: 4px;
+}
+
+.employee-operation-option select {
+  min-width: 0;
+  width: 100%;
 }
 
 .table-wrap {
@@ -655,6 +705,20 @@ dd {
   color: #8d99aa;
   display: block;
   font-size: 0.76rem;
+}
+
+.leaderboard-detail {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.leaderboard-detail small,
+.leaderboard-detail p {
+  color: #b7c0cf;
+  font-size: 0.84rem;
 }
 
 .modal-backdrop {
@@ -777,5 +841,12 @@ dd {
 
   .leaderboard-row em {
     display: none;
+  }
+
+  .leaderboard-tabs,
+  .leaderboard-categories,
+  .employee-assignment-row,
+  .employee-operation-option {
+    grid-template-columns: 1fr;
   }
 }
