@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { RotateCcw, Trophy } from "lucide-react";
-import type { ActionId, EmployeeOperationId, GameEvent, GameState, NewGameInput } from "./game/types";
+import type { EmployeeOperationAssignment, GameEvent, GameState, NewGameInput, TurnSubmission } from "./game/types";
 import { createNewGame } from "./game/engine/createGame";
 import { pickNextEvent } from "./game/engine/events";
 import { clearGame, loadGame, saveGame } from "./game/engine/persistence";
@@ -32,13 +32,13 @@ function createInitialAppState(): AppState {
 
 export function App() {
   const [{ game, activeEvent }, setAppState] = useState<AppState>(() => createInitialAppState());
-  const [selectedEmployeeOperation, setSelectedEmployeeOperation] = useState<EmployeeOperationId | null>(null);
+  const [employeeAssignments, setEmployeeAssignments] = useState<EmployeeOperationAssignment[]>([]);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   function saveAndSetGame(next: GameState, nextActiveEvent: GameEvent | null) {
     saveGame(next);
     setAppState({ game: next, activeEvent: nextActiveEvent });
-    setSelectedEmployeeOperation(null);
+    setEmployeeAssignments([]);
     setAchievementsOpen(false);
   }
 
@@ -52,9 +52,12 @@ export function App() {
     setAppState({ game: null, activeEvent: null });
   }
 
-  function applyTurn(actions: ActionId[]) {
+  function applyTurn(submission: TurnSubmission) {
     if (!game) return;
-    const next = advanceGameTurn(game, actions, selectedEmployeeOperation ?? undefined);
+    const next = advanceGameTurn(game, {
+      ...submission,
+      employeeOperations: employeeAssignments,
+    });
     saveAndSetGame(next, pickNextEvent(next));
   }
 
@@ -67,8 +70,6 @@ export function App() {
   if (!game) return <CreateFounder onStart={start} />;
   if (game.endingId) return <GameOver game={game} onReset={reset} />;
 
-  const requiresEmployeeOperation = game.employees.length > 0;
-
   return (
     <main className="app-shell">
       <Dashboard game={game} />
@@ -79,18 +80,14 @@ export function App() {
           ) : (
             <>
               <ActionPanel
-                canSubmitExtra={!requiresEmployeeOperation || selectedEmployeeOperation !== null}
+                game={game}
                 onSubmit={applyTurn}
-                submitHint={
-                  requiresEmployeeOperation && selectedEmployeeOperation === null
-                    ? "有员工时必须先选择 1 个员工季度操作。"
-                    : undefined
-                }
+                employeeOperations={employeeAssignments}
               />
               <EmployeeOperationPanel
                 game={game}
-                selectedOperation={selectedEmployeeOperation}
-                onSelect={setSelectedEmployeeOperation}
+                assignments={employeeAssignments}
+                onChange={setEmployeeAssignments}
               />
             </>
           )}

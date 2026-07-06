@@ -123,6 +123,37 @@ describe("App", () => {
     expect(screen.queryByRole("checkbox", { name: /Build Product/ })).not.toBeInTheDocument();
   });
 
+  it("shows Chinese play instructions and does not require a 24 point total", () => {
+    render(<App />);
+
+    expect(screen.getByText(/从一间会议室打到全球榜单/)).toBeInTheDocument();
+    expect(screen.queryByText(/属性点 .*\/24/)).not.toBeInTheDocument();
+  });
+
+  it("shows action gains and paid extra action controls after game start", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /开始创业/ }));
+
+    expect(screen.getAllByText(/模型能力↑/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("checkbox", { name: /购买额外公司动作/ })).toBeInTheDocument();
+  });
+
+  it("keeps employee operations optional after hiring", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /开始创业/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^招聘$/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^研发产品$/ }));
+    fireEvent.click(screen.getByRole("button", { name: /推进季度/ }));
+    if (screen.queryByText(/触发信号/)) {
+      resolveCurrentEvent();
+    }
+
+    expect(screen.getByText(/可选/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /^研发产品$/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^训练模型$/ }));
+    expect(screen.getByRole("button", { name: /推进季度/ })).toBeEnabled();
+  });
+
   it("returns to the action flow after resolving one event when multiple events are eligible", () => {
     startGame();
 
@@ -168,8 +199,8 @@ describe("App", () => {
   it("creates a real employee when Hire is submitted with Fundraise", () => {
     startGame();
 
-    fireEvent.click(screen.getByRole("checkbox", { name: /^招聘 / }));
-    fireEvent.click(screen.getByRole("checkbox", { name: /^融资 / }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^招聘$/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /^融资$/ }));
     fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
 
     const employeeRow = screen.getByRole("row", { name: /研究员/ });
@@ -177,7 +208,7 @@ describe("App", () => {
     expect(within(employeeRow).getAllByText(/\d+%/).length).toBeGreaterThanOrEqual(3);
   });
 
-  it("requires one employee operation when the company has employees", () => {
+  it("keeps employee operation optional when the company has employees", () => {
     const withEmployee = hireEmployee(createSavedGame(), "engineer");
     saveGame({
       ...withEmployee,
@@ -190,9 +221,9 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /冲销售/ }));
-    expect(submit).toBeDisabled();
+    expect(submit).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("button", { name: /加薪留人/ }));
+    fireEvent.change(screen.getByLabelText(/员工操作/), { target: { value: "raise-salary" } });
     expect(submit).toBeEnabled();
 
     fireEvent.click(submit);

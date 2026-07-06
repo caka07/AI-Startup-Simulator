@@ -1,11 +1,11 @@
 import { Users } from "lucide-react";
 import { employeeOperations } from "../engine/employeeOperations";
-import type { EmployeeOperationId, GameState } from "../types";
+import type { EmployeeOperationAssignment, EmployeeOperationId, GameState } from "../types";
 
 interface EmployeeOperationPanelProps {
   game: GameState;
-  selectedOperation: EmployeeOperationId | null;
-  onSelect: (operationId: EmployeeOperationId) => void;
+  assignments: EmployeeOperationAssignment[];
+  onChange: (assignments: EmployeeOperationAssignment[]) => void;
 }
 
 function riskTone(risk: string): "success" | "warning" | "danger" {
@@ -20,19 +20,27 @@ function riskLabel(risk: string): string {
   return "低风险";
 }
 
-export function EmployeeOperationPanel({ game, selectedOperation, onSelect }: EmployeeOperationPanelProps) {
+export function EmployeeOperationPanel({ game, assignments, onChange }: EmployeeOperationPanelProps) {
+  function updateAssignment(employeeId: string, operationId: EmployeeOperationId | "") {
+    const next = assignments.filter((assignment) => assignment.employeeId !== employeeId);
+    if (operationId) {
+      next.push({ employeeId, operationId });
+    }
+    onChange(next);
+  }
+
   return (
     <section className="panel employee-operation-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">每季度 1 项 / 有员工时必选</p>
+          <p className="eyebrow">每位员工最多 1 项</p>
           <h2>
             <Users aria-hidden="true" size={20} />
             员工季度操作
           </h2>
         </div>
-        <span className={selectedOperation ? "status-pill success" : "status-pill neutral"}>
-          {game.employees.length === 0 ? "暂无员工" : selectedOperation ? "已选择" : "待选择"}
+        <span className={assignments.length > 0 ? "status-pill success" : "status-pill neutral"}>
+          {game.employees.length === 0 ? "暂无员工" : assignments.length > 0 ? `已选择 ${assignments.length}` : "可选"}
         </span>
       </div>
 
@@ -40,22 +48,33 @@ export function EmployeeOperationPanel({ game, selectedOperation, onSelect }: Em
         <p className="empty-state">还没有员工。选择“招聘”后，这里会出现加薪、期权、PUA、放假和裁员操作。</p>
       ) : (
         <div className="employee-operation-list">
-          {employeeOperations.map((operation) => {
-            const selected = selectedOperation === operation.id;
+          {game.employees.map((employee) => {
+            const assignment = assignments.find((item) => item.employeeId === employee.id);
+            const operation = employeeOperations.find((item) => item.id === assignment?.operationId);
             return (
-              <button
-                aria-pressed={selected}
-                className={selected ? "employee-operation-option selected" : "employee-operation-option"}
-                key={operation.id}
-                onClick={() => onSelect(operation.id)}
-                type="button"
-              >
+              <div className="employee-operation-option" key={employee.id}>
                 <span>
-                  <strong>{operation.name}</strong>
-                  <small>{operation.description}</small>
+                  <strong>{employee.name}</strong>
+                  <small>{employee.role}</small>
                 </span>
-                <em className={`status-pill ${riskTone(operation.risk)}`}>{riskLabel(operation.risk)}</em>
-              </button>
+                <select
+                  aria-label={`${employee.name} 员工操作`}
+                  value={assignment?.operationId ?? ""}
+                  onChange={(event) => updateAssignment(employee.id, event.target.value as EmployeeOperationId | "")}
+                >
+                  <option value="">本季度不操作</option>
+                  {employeeOperations.map((operation) => (
+                    <option key={operation.id} value={operation.id}>
+                      {operation.name}
+                    </option>
+                  ))}
+                </select>
+                {operation ? (
+                  <em className={`status-pill ${riskTone(operation.risk)}`}>
+                    {riskLabel(operation.risk)}
+                  </em>
+                ) : null}
+              </div>
             );
           })}
         </div>

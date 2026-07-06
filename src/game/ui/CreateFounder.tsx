@@ -3,7 +3,6 @@ import { useMemo, useState, type FormEvent } from "react";
 import {
   ATTRIBUTE_IDS,
   ATTRIBUTE_LABELS,
-  TARGET_ATTRIBUTE_TOTAL,
   attributePresets,
   backgroundProfiles,
   findBackgroundProfile,
@@ -15,6 +14,8 @@ import type {
   BackgroundId,
   FounderAttributeId,
   FounderAttributes,
+  MetricEffect,
+  MetricId,
   NewGameInput,
   TrackId,
 } from "../types";
@@ -38,6 +39,35 @@ function isAttributePresetId(id: string): id is AttributePresetId {
   return id in presetAttributes;
 }
 
+const METRIC_LABELS: Record<MetricId, string> = {
+  cash: "现金",
+  runway: "Runway",
+  arr: "ARR",
+  mrr: "MRR",
+  pmf: "PMF",
+  modelPower: "模型能力",
+  productQuality: "产品质量",
+  computeSupply: "算力供给",
+  computeCost: "算力成本",
+  grossMargin: "Gross Margin",
+  techDebt: "技术债",
+  reputation: "声誉",
+  morale: "士气",
+  complianceRisk: "合规风险",
+  globalReadiness: "全球化准备",
+  boardPressure: "董事会压力",
+  founderHealth: "创始人健康",
+  founderEquity: "创始人股权",
+  valuation: "估值",
+  marketHeat: "市场热度",
+};
+
+function metricEffectText(effect: MetricEffect): string {
+  const arrow = effect.delta >= 0 ? "+" : "";
+  const value = Math.abs(effect.delta) >= 10_000 ? `${Math.round(effect.delta / 10_000)} 万` : `${arrow}${effect.delta}`;
+  return `${METRIC_LABELS[effect.metric]} ${value}`;
+}
+
 export function CreateFounder({ onStart }: CreateFounderProps) {
   const defaultBackground = backgroundProfiles[0];
   const defaultTrack = trackProfiles.find((track) => track.id === "ai-agent") ?? trackProfiles[0];
@@ -50,7 +80,7 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
   const selectedBackground = useMemo(() => findBackgroundProfile(backgroundId) ?? defaultBackground, [backgroundId]);
   const selectedTrack = useMemo(() => findTrackProfile(trackId) ?? defaultTrack, [trackId]);
   const total = attributeTotal(attributes);
-  const canStart = founderName.trim().length > 0 && total === TARGET_ATTRIBUTE_TOTAL;
+  const canStart = founderName.trim().length > 0;
 
   function selectBackground(id: BackgroundId) {
     const profile = findBackgroundProfile(id);
@@ -97,8 +127,8 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
               创始人简报
             </h1>
           </div>
-          <span className={total === TARGET_ATTRIBUTE_TOTAL ? "status-pill success" : "status-pill warning"}>
-            属性点 {total}/{TARGET_ATTRIBUTE_TOTAL}
+          <span className="status-pill neutral">
+            属性总和 {total}
           </span>
         </div>
 
@@ -109,13 +139,13 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
               从一间会议室打到全球榜单
             </h2>
             <p>
-              每个季度选择 2 个公司动作；招到人后，还要额外处理 1 个员工动作。融资、裁员、PUA、全球化、巨头围剿和监管审查都会改变你的现金、PMF、Runway、声誉与创始人股权。
+              每个季度你要同时处理公司动作、创始人状态和员工去留。模型能力会让你冲上榜单，PMF 和 ARR 决定能不能活成上市公司，Runway 会提醒你梦想按月扣费。
             </p>
           </div>
           <div>
             <h2>胜利不是上市，是活着抵达那天</h2>
             <p>
-              AI 巨头会刷新排行榜，投资人会催你讲新故事，员工会被三倍薪资挖走。你可以功成名就，也可以在最后一版 Demo 前现金断裂。
+              可以稳扎稳打，也可以学术造假、灰色数据、ARR 注水。捷径会让数字变漂亮，也会把监管、审计和董事会请进会议室。
             </p>
           </div>
         </section>
@@ -192,6 +222,7 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
               >
                 <strong>{preset.label}</strong>
                 <span>{preset.description}</span>
+                <small>{preset.metricEffects.map(metricEffectText).join(" / ")}</small>
               </button>
             ))}
           </div>

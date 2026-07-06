@@ -20,6 +20,7 @@ export function AchievementsModal({ game, onClose }: AchievementsModalProps) {
               <Trophy aria-hidden="true" size={20} />
               成就
             </h2>
+            <p className="eyebrow">已解锁 {completed.size} / {achievements.length}</p>
           </div>
           <button aria-label="关闭成就" className="secondary-button icon-button" onClick={onClose} type="button">
             <X aria-hidden="true" size={16} />
