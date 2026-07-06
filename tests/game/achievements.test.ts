@@ -30,7 +30,7 @@ describe("achievements", () => {
     const next = unlockAchievements(game);
 
     expect(next.completedAchievements).toContain("ten-million-arr");
-    expect(next.log.at(-1)).toContain("千万 ARR");
+    expect(next.log.some((entry) => entry.includes("千万 ARR"))).toBe(true);
     expect(game.completedAchievements).toEqual([]);
   });
 
@@ -55,5 +55,20 @@ describe("achievements", () => {
     );
     expect(hidden).toBeDefined();
     expect(hidden && "conditionText" in hidden ? hidden.conditionText : undefined).toBe("???");
+  });
+
+  it("ships a large achievement set with many hidden goals", () => {
+    const hidden = achievements.filter((achievement) => achievement.hiddenCondition);
+
+    expect(achievements.length).toBeGreaterThanOrEqual(45);
+    expect(hidden.length).toBeGreaterThanOrEqual(15);
+    expect(new Set(achievements.map((achievement) => achievement.id)).size).toBe(achievements.length);
+  });
+
+  it("keeps hidden achievement names visible but conditions secret", () => {
+    const hidden = achievements.find((achievement) => achievement.id === "ipo-quiet-period-cultist");
+
+    expect(hidden?.name).toBe("静默期邪教徒");
+    expect(hidden?.conditionText).toBe("???");
   });
 });

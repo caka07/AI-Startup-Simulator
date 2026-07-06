@@ -53,13 +53,25 @@ export const endings = [
     ],
   },
   {
+    id: "professional-ceo-replaced-founder",
+    name: "职业 CEO 接管",
+    description: "董事会感谢创始人的愿景，然后把办公室给了别人。",
+    priority: 65,
+    trigger: [
+      { metric: "boardPressure", op: ">=", value: 85 },
+      { metric: "founderEquity", op: "<=", value: 25 },
+    ],
+  },
+  {
     id: "hk-ipo",
     name: "港股 IPO",
     description: "公司带着真实收入和排练过很多遍的答案在香港上市。",
     priority: 70,
     trigger: [
       { metric: "arr", op: ">=", value: 80_000_000 },
-      { metric: "complianceRisk", op: "<=", value: 35 },
+      { metric: "complianceRisk", op: "<=", value: 40 },
+      { metric: "grossMargin", op: ">=", value: 45 },
+      { metric: "valuation", op: ">=", value: 800_000_000 },
     ],
   },
   {
@@ -70,6 +82,10 @@ export const endings = [
     trigger: [
       { metric: "arr", op: ">=", value: 150_000_000 },
       { metric: "globalReadiness", op: ">=", value: 75 },
+      { metric: "complianceRisk", op: "<=", value: 35 },
+      { metric: "founderHealth", op: ">", value: 40 },
+      { metric: "grossMargin", op: ">=", value: 50 },
+      { metric: "valuation", op: ">=", value: 2_000_000_000 },
     ],
   },
   {
@@ -90,16 +106,6 @@ export const endings = [
     trigger: [
       { metric: "valuation", op: ">=", value: 1_000_000_000 },
       { metric: "founderEquity", op: ">=", value: 30 },
-    ],
-  },
-  {
-    id: "professional-ceo-replaced-founder",
-    name: "职业 CEO 接管",
-    description: "董事会感谢创始人的愿景，然后把办公室给了别人。",
-    priority: 110,
-    trigger: [
-      { metric: "boardPressure", op: ">=", value: 85 },
-      { metric: "founderEquity", op: "<=", value: 25 },
     ],
   },
   {

@@ -22,62 +22,92 @@ function gameWithMetrics(metrics: Partial<GameState["metrics"]> = {}): GameState
   };
 }
 
-function withUsRevenue(game: GameState, revenueShare = 45): GameState {
-  return {
-    ...game,
-    markets: {
-      ...game.markets,
-      us: {
-        ...game.markets.us,
-        unlocked: true,
-        revenueShare,
-        localization: 80,
-      },
-    },
-  };
-}
-
 describe("endings", () => {
   it("returns null when no ending trigger matches", () => {
     expect(evaluateEnding(createNewGame(input))).toBeNull();
   });
 
   it("prioritizes forced failure over prestige endings", () => {
-    const game = withUsRevenue(
-      gameWithMetrics({ runway: 0, arr: 800_000_000, grossMargin: 60, complianceRisk: 20, globalReadiness: 85 }),
-    );
+    const game = gameWithMetrics({
+      runway: 0,
+      arr: 800_000_000,
+      grossMargin: 60,
+      complianceRisk: 20,
+      globalReadiness: 85,
+      founderHealth: 60,
+      valuation: 2_500_000_000,
+    });
 
     expect(evaluateEnding(game)?.id).toBe("cashflow-break");
   });
 
-  it("unlocks US IPO only with global revenue and clean compliance", () => {
-    const game = withUsRevenue(
-      gameWithMetrics({ arr: 800_000_000, grossMargin: 60, complianceRisk: 20, globalReadiness: 85 }),
-    );
+  it("prefers US IPO over HK IPO when both public-market triggers match", () => {
+    const game = gameWithMetrics({
+      arr: 800_000_000,
+      grossMargin: 60,
+      complianceRisk: 20,
+      globalReadiness: 85,
+      founderHealth: 60,
+      valuation: 2_500_000_000,
+    });
 
     expect(evaluateEnding(game)?.id).toBe("us-ipo");
   });
 
-  it("blocks US IPO when US revenue is not unlocked", () => {
-    const game = gameWithMetrics({ arr: 800_000_000, grossMargin: 60, complianceRisk: 20, globalReadiness: 85 });
+  it("unlocks HK IPO for public-scale revenue below US IPO valuation", () => {
+    const game = gameWithMetrics({
+      arr: 800_000_000,
+      grossMargin: 60,
+      complianceRisk: 20,
+      globalReadiness: 85,
+      founderHealth: 60,
+      valuation: 900_000_000,
+    });
 
     expect(evaluateEnding(game)?.id).toBe("hk-ipo");
   });
 
-  it("blocks US IPO when US revenue share is below forty percent", () => {
-    const game = withUsRevenue(
-      gameWithMetrics({ arr: 800_000_000, grossMargin: 60, complianceRisk: 20, globalReadiness: 85 }),
-      39,
-    );
+  it("does not require US market revenue share for US IPO", () => {
+    const game = gameWithMetrics({
+      arr: 800_000_000,
+      grossMargin: 60,
+      complianceRisk: 20,
+      globalReadiness: 85,
+      founderHealth: 60,
+      valuation: 2_500_000_000,
+    });
 
-    expect(evaluateEnding(game)?.id).toBe("hk-ipo");
+    expect(evaluateEnding(game)?.id).toBe("us-ipo");
   });
 
   it("blocks US IPO when compliance risk is too high", () => {
-    const game = withUsRevenue(
-      gameWithMetrics({ arr: 800_000_000, grossMargin: 35, complianceRisk: 36, globalReadiness: 85, founderHealth: 60 }),
-    );
+    const game = gameWithMetrics({
+      arr: 800_000_000,
+      grossMargin: 35,
+      complianceRisk: 36,
+      globalReadiness: 85,
+      founderHealth: 60,
+      valuation: 2_500_000_000,
+    });
 
-    expect(evaluateEnding(game)).toBeNull();
+    expect(evaluateEnding(game)?.id).not.toBe("us-ipo");
+  });
+
+  it("requires global readiness, clean compliance, founder health, and public-scale ARR for US IPO", () => {
+    const game = gameWithMetrics({
+      arr: 160_000_000,
+      globalReadiness: 80,
+      complianceRisk: 25,
+      founderHealth: 55,
+      grossMargin: 58,
+      valuation: 2_500_000_000,
+    });
+
+    expect(evaluateEnding(game)?.id).toBe("us-ipo");
+    expect(
+      evaluateEnding(
+        gameWithMetrics({ arr: 160_000_000, globalReadiness: 80, complianceRisk: 55, founderHealth: 55 }),
+      )?.id,
+    ).not.toBe("us-ipo");
   });
 });

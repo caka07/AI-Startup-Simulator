@@ -32,7 +32,7 @@ function contentTables(): {
 describe("content validation", () => {
   it("ships the first playable slice content counts", () => {
     expect(events).toHaveLength(48);
-    expect(achievements).toHaveLength(20);
+    expect(achievements).toHaveLength(45);
     expect(endings).toHaveLength(12);
   });
 
