@@ -72,7 +72,8 @@ export type FactionId =
   | "cloudsoft"
   | "byteplanet"
   | "tencentacle"
-  | "alicloud-temple";
+  | "alicloud-temple"
+  | "oasis-models";
 
 export type InvestorId =
   | "alice-chen"
@@ -138,6 +139,14 @@ export type ActionCategory = "research" | "product" | "commercial" | "finance" |
 export type AchievementId = string;
 export type EndingId = string;
 export type EventId = string;
+
+export type LeaderboardCategoryId = "overall" | "model" | "commercial" | "global";
+
+export interface LeaderboardCategory {
+  id: LeaderboardCategoryId;
+  label: string;
+  description: string;
+}
 
 export interface Employee {
   id: string;

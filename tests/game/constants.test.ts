@@ -89,6 +89,7 @@ describe("game constants", () => {
       "byteplanet",
       "tencentacle",
       "alicloud-temple",
+      "oasis-models",
     ]);
   });
 

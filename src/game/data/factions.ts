@@ -57,4 +57,11 @@ export const factions = [
     role: "Infrastructure incumbent",
     pressure: "Turns cloud credits into architecture gravity.",
   },
+  {
+    id: "oasis-models",
+    name: "Oasis Models",
+    description: "A sovereign AI consortium selling Arabic-first models and compliance-heavy deployments.",
+    role: "Regional sovereign AI rival",
+    pressure: "Wins government-backed global expansion deals with localization and patient capital.",
+  },
 ] satisfies Faction[];

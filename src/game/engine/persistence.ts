@@ -22,6 +22,22 @@ function hasFiniteNumberKeys(value: unknown, keys: readonly string[]): boolean {
   return keys.every((key) => Number.isFinite(value[key]));
 }
 
+function normalizeFactionRelations(value: unknown): GameState["factionRelations"] | null {
+  if (!isRecord(value)) return null;
+  const normalized = {} as GameState["factionRelations"];
+  for (const id of FACTION_IDS) {
+    const relation = value[id];
+    if (relation === undefined) {
+      normalized[id] = 0;
+    } else if (typeof relation === "number" && Number.isFinite(relation)) {
+      normalized[id] = relation;
+    } else {
+      return null;
+    }
+  }
+  return normalized;
+}
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -67,6 +83,8 @@ function parseSavedGame(value: unknown): GameState | null {
   const normalizedResolvedEventIds =
     resolvedEventIds === undefined ? [] : isStringArray(resolvedEventIds) ? resolvedEventIds : null;
   if (!normalizedResolvedEventIds) return null;
+  const normalizedFactionRelations = normalizeFactionRelations(value.factionRelations);
+  if (!normalizedFactionRelations) return null;
 
   if (
     !Number.isFinite(value.seed) ||
@@ -81,7 +99,6 @@ function parseSavedGame(value: unknown): GameState | null {
     !hasValidEmployees(value.employees) ||
     !hasValidMarkets(value.markets) ||
     !hasFiniteNumberKeys(value.investorRelations, INVESTOR_IDS) ||
-    !hasFiniteNumberKeys(value.factionRelations, FACTION_IDS) ||
     !isStringArray(value.completedAchievements) ||
     !isStringArray(value.log) ||
     (value.endingId !== null && typeof value.endingId !== "string")
@@ -92,6 +109,7 @@ function parseSavedGame(value: unknown): GameState | null {
   return {
     ...(value as unknown as GameState),
     resolvedEventIds: normalizedResolvedEventIds,
+    factionRelations: normalizedFactionRelations,
   };
 }
 

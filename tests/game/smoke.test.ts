@@ -132,6 +132,28 @@ describe("game persistence", () => {
     expect(loadGame()).toEqual({ ...legacyGame, resolvedEventIds: [] });
   });
 
+  it("normalizes valid saves that predate oasis model faction relations", () => {
+    const legacyGame = createSmokeGame();
+    const { "oasis-models": _oasisModels, ...legacyFactionRelations } = legacyGame.factionRelations;
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...legacyGame, factionRelations: legacyFactionRelations }));
+
+    expect(loadGame()).toEqual({
+      ...legacyGame,
+      factionRelations: { ...legacyFactionRelations, "oasis-models": 0 },
+    });
+  });
+
+  it("removes saves with malformed faction relation values", () => {
+    const game = createSmokeGame();
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({ ...game, factionRelations: { ...game.factionRelations, "oasis-models": "bad" } }),
+    );
+
+    expect(loadGame()).toBeNull();
+    expect(storage.getItem(SAVE_KEY)).toBeNull();
+  });
+
   it("clears saved game state", () => {
     saveGame(createSmokeGame());
 

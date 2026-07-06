@@ -84,6 +84,7 @@ export const FACTION_IDS: FactionId[] = [
   "byteplanet",
   "tencentacle",
   "alicloud-temple",
+  "oasis-models",
 ];
 
 export const INVESTOR_IDS: InvestorId[] = [
