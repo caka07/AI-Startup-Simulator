@@ -238,7 +238,7 @@ describe("App", () => {
   });
 
   it("restores a pending event prompt from a saved game after reload", () => {
-    saveGame(advanceGameTurn(createSavedGame(), ["sell", "build-product"]));
+    saveGame(advanceGameTurn(createSavedGame({ seed: 6 }), ["sell", "build-product"]));
 
     render(<App />);
 

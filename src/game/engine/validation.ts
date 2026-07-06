@@ -81,6 +81,14 @@ const REQUIRED_EVENT_IDS = [
   "sea-reseller-wants-exclusivity",
   "policy-team-wants-red-team",
   "customer-asks-source-code-escrow",
+  "audit-finds-inflated-arr",
+  "paper-replication-crisis",
+  "overseas-data-residency",
+  "star-researcher-poached",
+  "gpu-supply-squeeze",
+  "enterprise-security-review",
+  "founder-burnout-rumor",
+  "giant-launches-free-agent",
 ];
 
 const REQUIRED_ACHIEVEMENT_IDS = [

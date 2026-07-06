@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../src/game/engine/createGame";
-import { getEligibleEvents, matchesAll, matchesCondition, pickNextEvent, resolveEventChoice } from "../../src/game/engine/events";
+import {
+  calculateEventChance,
+  getEligibleEvents,
+  matchesAll,
+  matchesCondition,
+  pickNextEvent,
+  resolveEventChoice,
+  shouldTriggerEvent,
+} from "../../src/game/engine/events";
 import type { Condition, GameState, NewGameInput } from "../../src/game/types";
 
 const input: NewGameInput = {
@@ -88,8 +96,38 @@ describe("events", () => {
     expect(resolveEventChoice(game, event, "missing-choice")).toBe(game);
   });
 
+  it("exposes a high trigger chance when risk and heat are high", () => {
+    const game = gameWithMetrics({ marketHeat: 82, complianceRisk: 70, boardPressure: 55, founderHealth: 35 });
+
+    expect(calculateEventChance(game)).toBeGreaterThanOrEqual(0.75);
+  });
+
+  it("can deterministically skip or trigger an eligible event by quarter", () => {
+    const game = { ...gameWithMetrics({ valuation: 25_000_000, arr: 800_000, reputation: 40, marketHeat: 70 }), seed: 6 };
+
+    expect(shouldTriggerEvent(game)).toBe(false);
+    expect(shouldTriggerEvent({ ...game, quarter: 3 })).toBe(true);
+  });
+
+  it("keeps event selection null when chance gate fails", () => {
+    const quiet = {
+      ...gameWithMetrics({
+        valuation: 25_000_000,
+        marketHeat: 30,
+        complianceRisk: 5,
+        boardPressure: 0,
+        founderHealth: 90,
+      }),
+      seed: 6,
+    };
+
+    expect(shouldTriggerEvent(quiet)).toBe(false);
+    expect(getEligibleEvents(quiet).length).toBeGreaterThan(0);
+    expect(pickNextEvent(quiet)).toBeNull();
+  });
+
   it("picks an unresolved eligible event with deterministic rotation", () => {
-    const game = gameWithMetrics({ valuation: 25_000_000, arr: 800_000, reputation: 40 });
+    const game = { ...gameWithMetrics({ valuation: 25_000_000, arr: 800_000, reputation: 40 }), seed: 5 };
     const first = pickNextEvent(game);
     if (!first) throw new Error("Expected at least one eligible event");
 

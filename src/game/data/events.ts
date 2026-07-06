@@ -1071,4 +1071,246 @@ export const events = [
       },
     ],
   },
+  {
+    id: "audit-finds-inflated-arr",
+    title: "Audit Finds Inflated ARR",
+    category: "funding",
+    trigger: [
+      { metric: "complianceRisk", op: ">=", value: 55 },
+      { metric: "arr", op: ">=", value: 5_000_000 },
+    ],
+    choices: [
+      {
+        id: "restate-arr",
+        label: "Restate ARR immediately",
+        effects: [
+          { metric: "arr", delta: -1_200_000 },
+          { metric: "complianceRisk", delta: -10 },
+          { metric: "boardPressure", delta: 4 },
+        ],
+        log: "The board hates the correction, but diligence gets a cleaner number.",
+      },
+      {
+        id: "contest-audit",
+        label: "Contest the audit finding",
+        effects: [
+          { metric: "marketHeat", delta: 3 },
+          { metric: "complianceRisk", delta: 9 },
+          { metric: "reputation", delta: -5 },
+        ],
+        log: "The metric survives the week while trust leaves the room.",
+      },
+    ],
+  },
+  {
+    id: "paper-replication-crisis",
+    title: "Paper Replication Crisis",
+    category: "pr",
+    trigger: [
+      { metric: "reputation", op: ">=", value: 65 },
+      { metric: "complianceRisk", op: ">=", value: 45 },
+    ],
+    choices: [
+      {
+        id: "publish-reproduction-kit",
+        label: "Publish reproduction kit",
+        effects: [
+          { metric: "reputation", delta: 4 },
+          { metric: "modelPower", delta: -3 },
+          { metric: "complianceRisk", delta: -6 },
+        ],
+        log: "The claim gets smaller and more durable.",
+      },
+      {
+        id: "attack-critics",
+        label: "Attack the critics",
+        effects: [
+          { metric: "marketHeat", delta: 6 },
+          { metric: "reputation", delta: -8 },
+          { metric: "founderHealth", delta: -4 },
+        ],
+        log: "The thread trends, then turns into a recruiting problem.",
+      },
+    ],
+  },
+  {
+    id: "overseas-data-residency",
+    title: "Overseas Data Residency Demand",
+    category: "global",
+    trigger: [
+      { metric: "globalReadiness", op: ">=", value: 45 },
+      { metric: "arr", op: ">=", value: 3_000_000 },
+    ],
+    choices: [
+      {
+        id: "stand-up-region",
+        label: "Stand up regional storage",
+        effects: [
+          { metric: "globalReadiness", delta: 6 },
+          { metric: "complianceRisk", delta: -5 },
+          { metric: "cash", delta: -900_000 },
+        ],
+        log: "The region becomes real after procurement meets infrastructure.",
+      },
+      {
+        id: "centralize-data",
+        label: "Centralize for now",
+        effects: [
+          { metric: "grossMargin", delta: 3 },
+          { metric: "arr", delta: -700_000 },
+          { metric: "complianceRisk", delta: 5 },
+        ],
+        log: "Architecture stays simple and the overseas pipeline gets narrower.",
+      },
+    ],
+  },
+  {
+    id: "star-researcher-poached",
+    title: "Star Researcher Is Poached",
+    category: "employee",
+    trigger: [
+      { metric: "modelPower", op: ">=", value: 55 },
+      { metric: "marketHeat", op: ">=", value: 65 },
+    ],
+    choices: [
+      {
+        id: "make-retention-grant",
+        label: "Make retention grant",
+        effects: [
+          { metric: "modelPower", delta: 3 },
+          { metric: "morale", delta: 4 },
+          { metric: "founderEquity", delta: -2 },
+        ],
+        log: "The researcher stays after the cap table makes room.",
+      },
+      {
+        id: "document-the-stack",
+        label: "Document the stack",
+        effects: [
+          { metric: "modelPower", delta: -6 },
+          { metric: "techDebt", delta: -4 },
+          { metric: "cash", delta: 300_000 },
+        ],
+        log: "The departure hurts less after knowledge leaves their laptop.",
+      },
+    ],
+  },
+  {
+    id: "gpu-supply-squeeze",
+    title: "GPU Supply Squeeze",
+    category: "tech",
+    trigger: [{ metric: "computeCost", op: ">=", value: 40 }],
+    choices: [
+      {
+        id: "lock-annual-capacity",
+        label: "Lock annual capacity",
+        effects: [
+          { metric: "computeSupply", delta: 10 },
+          { metric: "cash", delta: -1_500_000 },
+          { metric: "computeCost", delta: 4 },
+        ],
+        log: "The cluster is available, and the balance sheet notices.",
+      },
+      {
+        id: "distill-models",
+        label: "Distill smaller models",
+        effects: [
+          { metric: "computeCost", delta: -8 },
+          { metric: "productQuality", delta: -2 },
+          { metric: "modelPower", delta: -3 },
+        ],
+        log: "Inference gets cheaper after the model gives up some swagger.",
+      },
+    ],
+  },
+  {
+    id: "enterprise-security-review",
+    title: "Enterprise Security Review",
+    category: "customer",
+    trigger: [
+      { metric: "arr", op: ">=", value: 2_000_000 },
+      { metric: "complianceRisk", op: ">=", value: 30 },
+    ],
+    choices: [
+      {
+        id: "fund-security-sprint",
+        label: "Fund security sprint",
+        effects: [
+          { metric: "complianceRisk", delta: -7 },
+          { metric: "arr", delta: 800_000 },
+          { metric: "runway", delta: -1 },
+        ],
+        log: "The checklist becomes shippable work and a signed expansion.",
+      },
+      {
+        id: "answer-with-roadmap",
+        label: "Answer with roadmap",
+        effects: [
+          { metric: "boardPressure", delta: 4 },
+          { metric: "arr", delta: -400_000 },
+          { metric: "productQuality", delta: 2 },
+        ],
+        log: "The buyer wants controls, not promises in a deck.",
+      },
+    ],
+  },
+  {
+    id: "founder-burnout-rumor",
+    title: "Founder Burnout Rumor",
+    category: "health",
+    trigger: [{ metric: "founderHealth", op: "<=", value: 35 }],
+    choices: [
+      {
+        id: "take-visible-break",
+        label: "Take visible break",
+        effects: [
+          { metric: "founderHealth", delta: 12 },
+          { metric: "boardPressure", delta: 3 },
+          { metric: "morale", delta: 2 },
+        ],
+        log: "The team sees recovery as operating discipline, even if the board flinches.",
+      },
+      {
+        id: "deny-and-keep-pitching",
+        label: "Deny and keep pitching",
+        effects: [
+          { metric: "marketHeat", delta: 4 },
+          { metric: "founderHealth", delta: -7 },
+          { metric: "reputation", delta: -2 },
+        ],
+        log: "The calendar stays full while everyone learns to read eye bags.",
+      },
+    ],
+  },
+  {
+    id: "giant-launches-free-agent",
+    title: "Giant Launches Free Agent",
+    category: "giant",
+    trigger: [
+      { metric: "pmf", op: "<=", value: 45 },
+      { metric: "marketHeat", op: ">=", value: 60 },
+    ],
+    choices: [
+      {
+        id: "narrow-to-power-users",
+        label: "Narrow to power users",
+        effects: [
+          { metric: "pmf", delta: 6 },
+          { metric: "marketHeat", delta: -5 },
+          { metric: "productQuality", delta: 3 },
+        ],
+        log: "The product gets less famous and more useful.",
+      },
+      {
+        id: "match-free-tier",
+        label: "Match the free tier",
+        effects: [
+          { metric: "marketHeat", delta: 5 },
+          { metric: "grossMargin", delta: -8 },
+          { metric: "boardPressure", delta: 5 },
+        ],
+        log: "Growth survives by sending the margin model into triage.",
+      },
+    ],
+  },
 ] satisfies GameEvent[];
