@@ -101,3 +101,5 @@ export const INVESTOR_IDS: InvestorId[] = [
   "byteplanet-capital",
   "hard-term-capital",
 ];
+
+export const EXTRA_COMPANY_ACTION_COST = 750_000;

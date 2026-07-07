@@ -44,6 +44,23 @@ describe("advanceGameTurn", () => {
     expect(next.log.join(" ")).toContain("创始人动作");
   });
 
+  it("does not apply a paid extra action when cash is insufficient", () => {
+    const game = {
+      ...createTurnGame(),
+      metrics: { ...createTurnGame().metrics, cash: 200_000 },
+    };
+
+    const next = advanceGameTurn(game, {
+      companyActions: ["build-product", "sell"],
+      extraCompanyAction: "train-model",
+      employeeOperations: [],
+    });
+
+    expect(next.metrics.cash).toBe(200_000);
+    expect(next.metrics.modelPower).toBe(game.metrics.modelPower);
+    expect(next.log.join(" ")).not.toContain("额外公司动作");
+  });
+
   it("keeps employee operations optional", () => {
     const hired = advanceGameTurn(createTurnGame(), { companyActions: ["hire", "build-product"], employeeOperations: [] });
     const next = advanceGameTurn(hired, { companyActions: ["sell", "build-product"], employeeOperations: [] });

@@ -96,7 +96,7 @@ export function hireEmployee(game: GameState, role: EmployeeRoleId): GameState {
     ...game,
     metrics: applyMetricDelta(game.metrics, "cash", -hiringCost),
     employees: [...game.employees, employee],
-    log: [...game.log, `Hired ${employee.name}; upfront hiring cost ${hiringCost}.`],
+    log: [...game.log, `招聘 ${employee.name}（${roleData.name}），前置成本 ${Math.round(hiringCost / 10_000)} 万。`],
   };
 }
 

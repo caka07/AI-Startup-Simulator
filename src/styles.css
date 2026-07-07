@@ -383,6 +383,7 @@ dd {
   align-items: center;
   border-radius: 6px;
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 0.74rem;
   font-style: normal;
   font-weight: 850;
@@ -688,7 +689,7 @@ dd {
 }
 
 .leaderboard-row {
-  grid-template-columns: 42px minmax(0, 1fr) 42px 42px;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(42px, auto) max-content;
 }
 
 .leaderboard-row.player {

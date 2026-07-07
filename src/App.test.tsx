@@ -4,6 +4,7 @@ import { App } from "./App";
 import { createNewGame } from "./game/engine/createGame";
 import { getEligibleEvents } from "./game/engine/events";
 import { hireEmployee } from "./game/engine/employees";
+import { deriveFounderAttributes } from "./game/engine/founderStart";
 import { loadGame, saveGame } from "./game/engine/persistence";
 import { advanceGameTurn } from "./game/engine/turn";
 import type { GameState } from "./game/types";
@@ -96,6 +97,38 @@ describe("App", () => {
     expect(loadGame()?.founder.name).toBe("沈一");
   });
 
+  it("starts with attributes derived from identity track and preset", () => {
+    render(<App />);
+
+    fireEvent.click(within(screen.getByRole("region", { name: "创业身份" })).getByRole("button", { name: /海外博士/ }));
+    fireEvent.click(within(screen.getByRole("region", { name: "创业赛道" })).getByRole("button", { name: /金融 AI/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "属性预设" })).getByRole("button", { name: /全球化/ }));
+    fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
+
+    expect(loadGame()?.founder.attributes).toEqual(
+      deriveFounderAttributes({
+        seed: 20260702,
+        founderName: "沈一",
+        backgroundId: "overseas-phd",
+        trackId: "finance-ai",
+        presetId: "global",
+      }),
+    );
+  });
+
+  it("keeps selected preset metric effects after attribute customization", () => {
+    render(<App />);
+
+    fireEvent.click(within(screen.getByRole("group", { name: "属性预设" })).getByRole("button", { name: /全球化/ }));
+    fireEvent.change(screen.getByLabelText("技术"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
+
+    const saved = loadGame();
+    expect(saved?.founder.attributes.tech).toBe(10);
+    expect(saved?.metrics.globalReadiness).toBe(16);
+    expect(saved?.metrics.pmf).toBe(31);
+  });
+
   it("requires exactly two actions and resets selected actions after advancing", () => {
     startGame();
 
@@ -134,8 +167,25 @@ describe("App", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /开始创业/ }));
 
-    expect(screen.getAllByText(/模型能力↑/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/模型能力 \+\d+/).length).toBeGreaterThan(0);
     expect(screen.getByRole("checkbox", { name: /购买额外公司动作/ })).toBeInTheDocument();
+  });
+
+  it("lets the founder choose a quarterly founder action", () => {
+    saveGame({
+      ...createSavedGame(),
+      metrics: { ...createSavedGame().metrics, founderHealth: 50 },
+      resolvedEventIds: getEligibleEvents(createSavedGame()).map((event) => event.id),
+    });
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText("创始人本季度动作"), { target: { value: "take-vacation" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /冲销售/ }));
+    fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
+
+    expect(loadGame()?.log.some((entry) => entry.includes("创始人动作：强制休假"))).toBe(true);
+    expect(loadGame()?.metrics.founderHealth).toBeGreaterThan(50);
   });
 
   it("keeps employee operations optional after hiring", () => {
@@ -217,6 +267,8 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "员工季度操作" })).toBeInTheDocument();
+    expect(screen.getAllByText("工程师").length).toBeGreaterThan(0);
+    expect(screen.queryByText("engineer")).not.toBeInTheDocument();
     const submit = screen.getByRole("button", { name: "推进季度" });
 
     fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
@@ -228,6 +280,15 @@ describe("App", () => {
 
     fireEvent.click(submit);
     expect(loadGame()?.log.some((entry) => entry.includes("员工操作"))).toBe(true);
+  });
+
+  it("shows localized financing term labels", () => {
+    saveGame(createSavedGame());
+
+    render(<App />);
+
+    expect(screen.getByText("常规条款")).toBeInTheDocument();
+    expect(screen.queryByText("normal")).not.toBeInTheDocument();
   });
 
   it("opens an achievement panel with visible progress and hidden conditions", () => {

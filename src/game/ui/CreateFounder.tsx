@@ -9,6 +9,7 @@ import {
   findTrackProfile,
   trackProfiles,
 } from "../data/founderProfiles";
+import { deriveFounderAttributes } from "../engine/founderStart";
 import type {
   AttributePresetId,
   BackgroundId,
@@ -26,17 +27,6 @@ interface CreateFounderProps {
 
 function attributeTotal(attributes: FounderAttributes): number {
   return ATTRIBUTE_IDS.reduce((total, id) => total + attributes[id], 0);
-}
-
-const presetAttributes: Record<AttributePresetId, FounderAttributes> = {
-  operator: { tech: 3, sales: 3, fundraising: 4, management: 3, ethics: 3, stamina: 3, hype: 3, luck: 2 },
-  researcher: { tech: 5, sales: 2, fundraising: 2, management: 2, ethics: 4, stamina: 3, hype: 2, luck: 4 },
-  rainmaker: { tech: 2, sales: 4, fundraising: 5, management: 3, ethics: 2, stamina: 3, hype: 4, luck: 1 },
-  global: { tech: 4, sales: 3, fundraising: 3, management: 2, ethics: 4, stamina: 4, hype: 2, luck: 2 },
-};
-
-function isAttributePresetId(id: string): id is AttributePresetId {
-  return id in presetAttributes;
 }
 
 const METRIC_LABELS: Record<MetricId, string> = {
@@ -74,11 +64,23 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
   const [founderName, setFounderName] = useState("沈一");
   const [backgroundId, setBackgroundId] = useState<BackgroundId>(defaultBackground.id);
   const [trackId, setTrackId] = useState<TrackId>(defaultTrack.id);
-  const [presetId, setPresetId] = useState(`background-${defaultBackground.id}`);
-  const [attributes, setAttributes] = useState<FounderAttributes>(defaultBackground.attributes);
+  const [presetId, setPresetId] = useState<AttributePresetId>("operator");
+  const [customAttributes, setCustomAttributes] = useState<FounderAttributes | null>(null);
 
   const selectedBackground = useMemo(() => findBackgroundProfile(backgroundId) ?? defaultBackground, [backgroundId]);
   const selectedTrack = useMemo(() => findTrackProfile(trackId) ?? defaultTrack, [trackId]);
+  const derivedAttributes = useMemo(
+    () =>
+      deriveFounderAttributes({
+        seed: 20260702,
+        founderName,
+        backgroundId,
+        trackId,
+        presetId,
+      }),
+    [backgroundId, founderName, presetId, trackId],
+  );
+  const attributes = customAttributes ?? derivedAttributes;
   const total = attributeTotal(attributes);
   const canStart = founderName.trim().length > 0;
 
@@ -86,33 +88,30 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
     const profile = findBackgroundProfile(id);
     if (!profile) return;
     setBackgroundId(id);
-    setPresetId(`background-${id}`);
-    setAttributes(profile.attributes);
+    setCustomAttributes(null);
   }
 
-  function selectPreset(id: string) {
+  function selectPreset(id: AttributePresetId) {
     const preset = attributePresets.find((item) => item.id === id);
     if (!preset) return;
     setPresetId(id);
-    setAttributes(presetAttributes[preset.id]);
+    setCustomAttributes(null);
   }
 
   function updateAttribute(id: FounderAttributeId, value: number) {
-    setPresetId("custom");
-    setAttributes((current) => ({ ...current, [id]: value }));
+    setCustomAttributes((current) => ({ ...(current ?? derivedAttributes), [id]: value }));
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canStart) return;
-    const selectedPresetId = isAttributePresetId(presetId) ? presetId : undefined;
     onStart({
       seed: 20260702,
       founderName: founderName.trim(),
       backgroundId,
       trackId,
-      ...(selectedPresetId ? { presetId: selectedPresetId } : {}),
-      attributes,
+      presetId,
+      ...(customAttributes ? { attributes: customAttributes } : {}),
     });
   }
 
@@ -198,7 +197,10 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
                 aria-pressed={trackId === track.id}
                 className={trackId === track.id ? "track-card selected" : "track-card"}
                 key={track.id}
-                onClick={() => setTrackId(track.id)}
+                onClick={() => {
+                  setTrackId(track.id);
+                  setCustomAttributes(null);
+                }}
                 type="button"
               >
                 <strong>{track.label}</strong>
@@ -237,7 +239,7 @@ export function CreateFounder({ onStart }: CreateFounderProps) {
               </span>
               <input
                 aria-label={ATTRIBUTE_LABELS[id]}
-                max={5}
+                max={10}
                 min={1}
                 onChange={(event) => updateAttribute(id, Number(event.target.value))}
                 type="range"

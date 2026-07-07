@@ -1,8 +1,10 @@
 import { Rocket } from "lucide-react";
 import { useEffect, useState } from "react";
+import { EXTRA_COMPANY_ACTION_COST } from "../constants";
 import { actions } from "../data/actions";
+import { founderActions } from "../data/founderActions";
 import { calculateActionPreview } from "../engine/actionEffects";
-import type { ActionId, EmployeeOperationAssignment, GameState, TurnSubmission } from "../types";
+import type { ActionId, EmployeeOperationAssignment, FounderActionId, GameState, TurnSubmission } from "../types";
 
 interface ActionPanelProps {
   game: GameState;
@@ -13,6 +15,8 @@ interface ActionPanelProps {
 export function ActionPanel({ game, onSubmit, employeeOperations }: ActionPanelProps) {
   const [selected, setSelected] = useState<ActionId[]>([]);
   const [extraEnabled, setExtraEnabled] = useState(false);
+  const [founderAction, setFounderAction] = useState<FounderActionId | "">("");
+  const canBuyExtraAction = game.metrics.cash >= EXTRA_COMPANY_ACTION_COST;
   const requiredActions = extraEnabled ? 3 : 2;
   const canSubmit = selected.length === requiredActions;
 
@@ -35,10 +39,12 @@ export function ActionPanel({ game, onSubmit, employeeOperations }: ActionPanelP
     onSubmit({
       companyActions: selected.slice(0, 2),
       extraCompanyAction: extraEnabled ? selected[2] : null,
+      founderAction: founderAction || null,
       employeeOperations,
     });
     setSelected([]);
     setExtraEnabled(false);
+    setFounderAction("");
   }
 
   return (
@@ -57,9 +63,26 @@ export function ActionPanel({ game, onSubmit, employeeOperations }: ActionPanelP
         <input
           type="checkbox"
           checked={extraEnabled}
+          disabled={!canBuyExtraAction}
           onChange={(event) => setExtraEnabled(event.target.checked)}
         />
-        购买额外公司动作（现金 -75 万）
+        {canBuyExtraAction ? "购买额外公司动作（现金 -75 万）" : "现金不足，无法购买额外公司动作"}
+      </label>
+
+      <label className="founder-action-control field">
+        <span>创始人本季度动作</span>
+        <select
+          aria-label="创始人本季度动作"
+          value={founderAction}
+          onChange={(event) => setFounderAction(event.target.value as FounderActionId | "")}
+        >
+          <option value="">本季度不操作</option>
+          {founderActions.map((action) => (
+            <option key={action.id} value={action.id}>
+              {action.name}
+            </option>
+          ))}
+        </select>
       </label>
 
       <div className="action-list">

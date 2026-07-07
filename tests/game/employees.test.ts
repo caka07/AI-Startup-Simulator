@@ -45,6 +45,14 @@ describe("employees", () => {
     expect(next.employees[0].id).toBe("employee-1-engineer");
   });
 
+  it("writes Chinese hiring logs", () => {
+    const next = hireEmployee(game(), "engineer");
+
+    expect(next.log.at(-1)).toMatch(/^招聘/);
+    expect(next.log.at(-1)).toContain("前置成本");
+    expect(next.log.at(-1)).not.toContain("Hired");
+  });
+
   it("generates stable mixed employee names from seed and hire order", () => {
     const firstRun = hireEmployee(game(), "researcher");
     const secondRun = hireEmployee(game(), "researcher");

@@ -1,4 +1,4 @@
-import { EMPLOYEE_ROLE_IDS } from "../constants";
+import { EMPLOYEE_ROLE_IDS, EXTRA_COMPANY_ACTION_COST } from "../constants";
 import { actions as playerActions } from "../data/actions";
 import type { ActionId, EmployeeOperationId, GameEvent, GameState, TurnSubmission } from "../types";
 import { advanceQuarterClock } from "./advance";
@@ -11,8 +11,6 @@ import { resolveEventChoice } from "./events";
 import { executeFundraise } from "./finance";
 import { applyAction } from "./actions";
 import { applyFounderAction } from "./founderActions";
-
-const EXTRA_ACTION_COST = 750_000;
 
 const ACTION_HEALTH_COSTS = Object.fromEntries(
   playerActions.map((action) => [action.id, action.healthCost]),
@@ -66,10 +64,10 @@ export function advanceGameTurn(
   const paidExtra = submission.extraCompanyAction;
   let next = applyCompanyActions(game, companyActions);
 
-  if (paidExtra) {
+  if (paidExtra && next.metrics.cash >= EXTRA_COMPANY_ACTION_COST) {
     next = {
       ...next,
-      metrics: applyMetricDelta(next.metrics, "cash", -EXTRA_ACTION_COST),
+      metrics: applyMetricDelta(next.metrics, "cash", -EXTRA_COMPANY_ACTION_COST),
       log: [...next.log, "购买额外公司动作：现金 -75 万。"],
     };
     next = applyCompanyActions(next, [paidExtra]);

@@ -1,12 +1,17 @@
 import { Users } from "lucide-react";
+import { employeeRoles } from "../data/employeeRoles";
 import { employeeOperations } from "../engine/employeeOperations";
-import type { EmployeeOperationAssignment, EmployeeOperationId, GameState } from "../types";
+import type { EmployeeOperationAssignment, EmployeeOperationId, EmployeeRoleId, GameState } from "../types";
 
 interface EmployeeOperationPanelProps {
   game: GameState;
   assignments: EmployeeOperationAssignment[];
   onChange: (assignments: EmployeeOperationAssignment[]) => void;
 }
+
+const ROLE_NAMES: Record<EmployeeRoleId, string> = Object.fromEntries(
+  employeeRoles.map((role) => [role.id, role.name]),
+) as Record<EmployeeRoleId, string>;
 
 function riskTone(risk: string): "success" | "warning" | "danger" {
   if (risk === "high") return "danger";
@@ -55,7 +60,7 @@ export function EmployeeOperationPanel({ game, assignments, onChange }: Employee
               <div className="employee-operation-option" key={employee.id}>
                 <span>
                   <strong>{employee.name}</strong>
-                  <small>{employee.role}</small>
+                  <small>{ROLE_NAMES[employee.role]}</small>
                 </span>
                 <select
                   aria-label={`${employee.name} 员工操作`}

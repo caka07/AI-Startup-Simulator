@@ -30,6 +30,13 @@ function termTone(termStyle: string): "success" | "neutral" | "warning" | "dange
   return "danger";
 }
 
+function termLabel(termStyle: string): string {
+  if (termStyle === "friendly") return "友好条款";
+  if (termStyle === "normal") return "常规条款";
+  if (termStyle === "pressure") return "压力条款";
+  return "掠夺条款";
+}
+
 export function FinancingPanel({ game }: FinancingPanelProps) {
   const evaluation = evaluateFundraising(game);
 
@@ -43,7 +50,7 @@ export function FinancingPanel({ game }: FinancingPanelProps) {
             融资
           </h2>
         </div>
-        <span className={`status-pill ${termTone(evaluation.termStyle)}`}>{evaluation.termStyle}</span>
+        <span className={`status-pill ${termTone(evaluation.termStyle)}`}>{termLabel(evaluation.termStyle)}</span>
       </div>
 
       <dl className="finance-list">

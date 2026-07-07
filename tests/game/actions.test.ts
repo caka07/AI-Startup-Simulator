@@ -35,6 +35,28 @@ describe("actionEffects", () => {
     expect(preview.effects.find((effect) => effect.metric === "cash")?.delta).toBe(-500_000);
   });
 
+  it("normalizes cash when calculating compute-purchase efficiency", () => {
+    const lowCash = { ...gameWith(), metrics: { ...gameWith().metrics, cash: 200_000 } };
+    const highCash = { ...gameWith(), metrics: { ...gameWith().metrics, cash: 20_000_000 } };
+
+    const lowPreview = calculateActionPreview(lowCash, "buy-compute");
+    const highPreview = calculateActionPreview(highCash, "buy-compute");
+
+    expect(highPreview.efficiencyMultiplier).toBeGreaterThan(lowPreview.efficiencyMultiplier);
+    expect(highPreview.efficiencyMultiplier - lowPreview.efficiencyMultiplier).toBeLessThan(0.2);
+  });
+
+  it("previews fundraise and hire from their actual execution effects", () => {
+    const game = gameWith();
+    const fundraise = calculateActionPreview(game, "fundraise");
+    const hire = calculateActionPreview(game, "hire");
+
+    expect(fundraise.effects.find((effect) => effect.metric === "cash")?.delta).toBe(1_500_000);
+    expect(fundraise.summary.join(" ")).toContain("现金 +150万");
+    expect(hire.effects.find((effect) => effect.metric === "cash")?.delta).toBeLessThan(0);
+    expect(hire.summary.join(" ")).toContain("现金");
+  });
+
   it("applies risky shortcuts with upside and compliance risk", () => {
     const next = applyAction(gameWith({ hype: 8, ethics: 2 }), "academic-fraud");
 
