@@ -26,7 +26,7 @@ export function LeaderboardPanel({ game }: LeaderboardPanelProps) {
           <p className="eyebrow">模拟实时榜 / 非联网</p>
           <h2>
             <BarChart3 aria-hidden="true" size={20} />
-            AI 公司排行榜
+            排行榜
           </h2>
         </div>
         <span className="status-pill neutral">{leaderboard.playerRankLabel}</span>
@@ -37,9 +37,9 @@ export function LeaderboardPanel({ game }: LeaderboardPanelProps) {
           <button
             aria-pressed={categoryId === category.id}
             className={categoryId === category.id ? "secondary-button selected" : "secondary-button"}
+            data-tooltip={category.description}
             key={category.id}
             onClick={() => setCategoryId(category.id)}
-            title={category.description}
             type="button"
           >
             {category.label}
@@ -68,7 +68,7 @@ export function LeaderboardPanel({ game }: LeaderboardPanelProps) {
           <button className="leaderboard-row player" onClick={() => setSelectedCompanyId("player")} type="button">
             <span className="leaderboard-rank">...</span>
             <div>
-              <strong>{game.founder.name}</strong>
+              <strong>{game.companyName}</strong>
               <small>{leaderboard.playerRankLabel}</small>
             </div>
             <span className="leaderboard-score">{leaderboard.playerScore}</span>

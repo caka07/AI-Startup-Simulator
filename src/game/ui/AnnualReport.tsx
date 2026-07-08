@@ -1,6 +1,7 @@
 import { ClipboardList, Trophy } from "lucide-react";
 import { achievements } from "../data/achievements";
-import type { AchievementId, GameState } from "../types";
+import { endings } from "../data/endings";
+import type { AchievementId, EndingId, GameState } from "../types";
 
 interface AnnualReportProps {
   game: GameState;
@@ -8,6 +9,9 @@ interface AnnualReportProps {
 
 const ACHIEVEMENT_NAMES: Record<AchievementId, string> = Object.fromEntries(
   achievements.map((achievement) => [achievement.id, achievement.name]),
+);
+const ENDING_NAMES: Record<EndingId, string> = Object.fromEntries(
+  endings.map((ending) => [ending.id, ending.name]),
 );
 
 export function AnnualReport({ game }: AnnualReportProps) {
@@ -31,6 +35,24 @@ export function AnnualReport({ game }: AnnualReportProps) {
           <li key={`${line}-${index}`}>{line}</li>
         ))}
       </ol>
+
+      <div className="achievement-block">
+        <h3>
+          <Trophy aria-hidden="true" size={18} />
+          已达成结局
+        </h3>
+        {game.completedEndings.length === 0 ? (
+          <p className="empty-state">暂无结局。先把公司从季度报表里活出来。</p>
+        ) : (
+          <div className="achievement-list">
+            {game.completedEndings.map((id) => (
+              <span className="round-pill achievement-pill" key={id}>
+                {ENDING_NAMES[id] ?? id}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="achievement-block">
         <h3>

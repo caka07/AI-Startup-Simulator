@@ -29,7 +29,7 @@ export const ATTRIBUTE_LABELS: Record<FounderAttributeId, string> = {
   luck: "运气",
 };
 
-export const TARGET_ATTRIBUTE_TOTAL = 24;
+export const TARGET_ATTRIBUTE_TOTAL = 30;
 
 export interface FounderBackgroundProfile {
   id: BackgroundId;
@@ -68,7 +68,7 @@ export const backgroundProfiles: FounderBackgroundProfile[] = [
     label: "大厂产品经理",
     description: "会写路线图，也知道怎么把半成品包装成季度胜利。",
     specialty: "产品质量 +5，PMF +3，管理 +，技术不是最强",
-    attributes: { tech: 3, sales: 3, fundraising: 4, management: 4, ethics: 3, stamina: 3, hype: 2, luck: 2 },
+    attributes: { tech: 3, sales: 3, fundraising: 4, management: 3, ethics: 3, stamina: 3, hype: 2, luck: 2 },
     metricEffects: [
       { metric: "productQuality", delta: 5 },
       { metric: "pmf", delta: 3 },
@@ -151,11 +151,11 @@ export const backgroundProfiles: FounderBackgroundProfile[] = [
     id: "indie-hacker",
     label: "独立开发者",
     description: "能一个人把原型搓出来，但组织和销售会逐渐追上来讨债。",
-    specialty: "产品质量 +3，Runway +2，管理压力更早出现",
+    specialty: "产品质量 +3，现金 +40 万，管理压力更早出现",
     attributes: { tech: 4, sales: 2, fundraising: 2, management: 2, ethics: 3, stamina: 5, hype: 2, luck: 4 },
     metricEffects: [
       { metric: "productQuality", delta: 3 },
-      { metric: "runway", delta: 2 },
+      { metric: "cash", delta: 400_000 },
       { metric: "boardPressure", delta: 2 },
     ],
   },

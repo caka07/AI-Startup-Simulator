@@ -67,4 +67,28 @@ export const founderActions = [
     ],
     attributeEffects: { management: 0.1, ethics: 0.1 },
   },
+  {
+    id: "delegate-ceo",
+    name: "授权代理 CEO",
+    description: "把日常经营交出去，换一口气，也换来董事会更多存在感。",
+    effects: [
+      { metric: "founderHealth", delta: 16 },
+      { metric: "boardPressure", delta: 5 },
+      { metric: "marketHeat", delta: -3 },
+      { metric: "morale", delta: -2 },
+    ],
+    attributeEffects: { management: 0.2, stamina: 0.1 },
+  },
+  {
+    id: "medical-checkup",
+    name: "住院体检",
+    description: "公司暂停几天高速旋转，创始人重新确认自己还有血压。",
+    effects: [
+      { metric: "founderHealth", delta: 22 },
+      { metric: "cash", delta: -200_000 },
+      { metric: "boardPressure", delta: 3 },
+      { metric: "pmf", delta: -2 },
+    ],
+    attributeEffects: { stamina: 0.2 },
+  },
 ] satisfies FounderAction[];

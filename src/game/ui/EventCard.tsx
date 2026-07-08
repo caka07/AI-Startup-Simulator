@@ -1,5 +1,10 @@
 import { AlertTriangle } from "lucide-react";
-import type { Condition, GameEvent, GameEventChoice, MetricId } from "../types";
+import {
+  choiceLabel as localizedChoiceLabel,
+  eventContext as localizedEventContext,
+  eventTitle as localizedEventTitle,
+} from "../data/eventText";
+import type { GameEvent, GameEventChoice, MetricEffect, MetricId } from "../types";
 
 interface EventCardProps {
   event: GameEvent;
@@ -20,15 +25,15 @@ const CATEGORY_LABELS: Record<GameEvent["category"], string> = {
 
 const METRIC_LABELS: Record<MetricId, string> = {
   cash: "现金",
-  runway: "Runway",
-  arr: "ARR",
-  mrr: "MRR",
-  pmf: "PMF",
+  runway: "现金跑道",
+  arr: "年度经常性收入",
+  mrr: "月度经常性收入",
+  pmf: "产品市场匹配",
   modelPower: "模型能力",
   productQuality: "产品质量",
   computeSupply: "算力供给",
   computeCost: "算力成本",
-  grossMargin: "Gross Margin",
+  grossMargin: "毛利率",
   techDebt: "技术债",
   reputation: "声誉",
   morale: "士气",
@@ -39,6 +44,18 @@ const METRIC_LABELS: Record<MetricId, string> = {
   founderEquity: "创始人股权",
   valuation: "估值",
   marketHeat: "市场热度",
+};
+
+const CATEGORY_CONTEXTS: Record<GameEvent["category"], string> = {
+  funding: "投资人把你叫进会议室，夸了愿景，也顺手掏出了计算器。",
+  employee: "团队内部开始出现裂纹，薪酬、期权和信仰都被放到桌面上重新估价。",
+  giant: "科技巨头的一个动作改变了市场风向，你的小公司必须马上决定站位。",
+  customer: "客户那边突然把你的路线图、现金流和团队耐心一起塞进会议室。",
+  regulation: "监管和审计开始靠近，拖延会便宜一时，但账会记到以后。",
+  tech: "技术路线被现实拦了一下，模型、算力和产品体验要重新排优先级。",
+  pr: "外部声量突然变大，热度可以换增长，也可能把缺陷照得更亮。",
+  global: "海外机会递到面前，语言、合规、渠道和现金流会一起要预算。",
+  health: "创始人身体和精神状态开始报错，公司最大的单点风险坐在你的椅子上。",
 };
 
 const EVENT_TITLES: Record<string, string> = {
@@ -167,18 +184,16 @@ const CHOICE_LABELS: Record<string, string> = {
   "offer-sla": "提供更强 SLA",
 };
 
-function formatCondition(condition: Condition): string {
-  const value =
-    Math.abs(condition.value) >= 1_000_000 ? `¥${Math.round(condition.value / 10_000)}万` : `${condition.value}`;
-  return `${METRIC_LABELS[condition.metric]} ${condition.op} ${value}`;
-}
-
 function eventTitle(event: GameEvent): string {
-  return EVENT_TITLES[event.id] ?? event.title;
+  return localizedEventTitle(event);
 }
 
 function choiceLabel(choice: GameEventChoice): string {
-  return CHOICE_LABELS[choice.id] ?? choice.label;
+  return localizedChoiceLabel(choice);
+}
+
+function formatEffect(effect: MetricEffect): string {
+  return `${METRIC_LABELS[effect.metric]}${effect.delta >= 0 ? "↑" : "↓"}`;
 }
 
 export function EventCard({ event, onChoose }: EventCardProps) {
@@ -194,12 +209,18 @@ export function EventCard({ event, onChoose }: EventCardProps) {
         </div>
       </div>
 
-      <p className="event-trigger">触发信号：{event.trigger.map(formatCondition).join("；")}</p>
+      <p className="event-context">{localizedEventContext(event)}</p>
 
       <div className="choice-list">
         {event.choices.map((choice) => (
           <button className="choice-button" key={choice.id} onClick={() => onChoose(choice.id)} type="button">
-            {choiceLabel(choice)}
+            <strong>{choiceLabel(choice)}</strong>
+            <span>趋势：</span>
+            <ul className="effect-list">
+              {choice.effects.map((effect) => (
+                <li key={`${choice.id}-${effect.metric}-${effect.delta}`}>{formatEffect(effect)}</li>
+              ))}
+            </ul>
           </button>
         ))}
       </div>

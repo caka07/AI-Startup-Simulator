@@ -6,6 +6,8 @@ export const endings = [
     name: "现金流断裂",
     description: "工资先于回款到来，而乐观不是法定货币。",
     priority: 10,
+    terminal: true,
+    settlementTitle: "工资日静默结算页",
     trigger: [{ metric: "runway", op: "<=", value: 0 }],
   },
   {
@@ -13,6 +15,8 @@ export const endings = [
     name: "监管叫停",
     description: "一次合规捷径变成了行政力量公开课。",
     priority: 20,
+    terminal: true,
+    settlementTitle: "合规补课结算页",
     trigger: [{ metric: "complianceRisk", op: ">=", value: 95 }],
   },
   {
@@ -20,6 +24,8 @@ export const endings = [
     name: "创始人健康崩盘",
     description: "日历早就提醒过，创始人终会变成最大瓶颈。",
     priority: 30,
+    terminal: true,
+    settlementTitle: "强制离线结算页",
     trigger: [{ metric: "founderHealth", op: "<=", value: 0 }],
   },
   {
@@ -27,6 +33,8 @@ export const endings = [
     name: "被开源碾碎",
     description: "DeepDuck 发布免费权重，你的付费护城河蒸发成 GitHub Star。",
     priority: 40,
+    terminal: true,
+    settlementTitle: "护城河蒸发结算页",
     trigger: [
       { metric: "modelPower", op: "<=", value: 20 },
       { metric: "productQuality", op: "<=", value: 30 },
@@ -37,9 +45,24 @@ export const endings = [
     name: "巨头免费功能",
     description: "平台巨头把你的核心功能免费打包，并称之为生态支持。",
     priority: 50,
+    terminal: true,
+    settlementTitle: "生态支持结算页",
     trigger: [
       { metric: "pmf", op: "<=", value: 25 },
       { metric: "reputation", op: "<=", value: 25 },
+    ],
+  },
+  {
+    id: "technical-debt-meltdown",
+    name: "技术债雪崩",
+    description: "临时方案终于长成基础设施，客户事故、返工和工程师沉默同时到期。",
+    priority: 55,
+    terminal: true,
+    settlementTitle: "线上事故复盘终局结算页",
+    trigger: [
+      { metric: "techDebt", op: ">=", value: 90 },
+      { metric: "productQuality", op: "<=", value: 35 },
+      { metric: "arr", op: ">=", value: 2_000_000 },
     ],
   },
   {
@@ -47,6 +70,8 @@ export const endings = [
     name: "被巨头收购",
     description: "退出材料写着战略协同，团队嘴里只有归属期悬崖。",
     priority: 60,
+    terminal: true,
+    settlementTitle: "战略协同结算页",
     trigger: [
       { metric: "valuation", op: ">=", value: 200_000_000 },
       { metric: "boardPressure", op: ">=", value: 70 },
@@ -57,6 +82,8 @@ export const endings = [
     name: "职业 CEO 接管",
     description: "董事会感谢创始人的愿景，然后把办公室给了别人。",
     priority: 65,
+    terminal: true,
+    settlementTitle: "愿景移交结算页",
     trigger: [
       { metric: "boardPressure", op: ">=", value: 85 },
       { metric: "founderEquity", op: "<=", value: 25 },
@@ -67,6 +94,8 @@ export const endings = [
     name: "港股 IPO",
     description: "公司带着真实收入和排练过很多遍的答案在香港上市。",
     priority: 70,
+    terminal: false,
+    settlementTitle: "港股 IPO MVP 结算页",
     trigger: [
       { metric: "arr", op: ">=", value: 80_000_000 },
       { metric: "complianceRisk", op: "<=", value: 40 },
@@ -75,10 +104,26 @@ export const endings = [
     ],
   },
   {
+    id: "nasdaq-roadshow-mvp",
+    name: "美股路演 MVP",
+    description: "PPT 已经能让投行点头，S-1 还需要现实世界继续配合。",
+    priority: 75,
+    terminal: false,
+    settlementTitle: "纳斯达克路演 MVP 结算页",
+    trigger: [
+      { metric: "arr", op: ">=", value: 100_000_000 },
+      { metric: "globalReadiness", op: ">=", value: 60 },
+      { metric: "marketHeat", op: ">=", value: 75 },
+      { metric: "valuation", op: ">=", value: 1_500_000_000 },
+    ],
+  },
+  {
     id: "us-ipo",
     name: "美股 IPO",
     description: "路演穿过数据问题、地缘政治和三版 S-1。",
     priority: 80,
+    terminal: true,
+    settlementTitle: "纳斯达克敲钟终局结算页",
     trigger: [
       { metric: "arr", op: ">=", value: 150_000_000 },
       { metric: "globalReadiness", op: ">=", value: 75 },
@@ -93,9 +138,24 @@ export const endings = [
     name: "现金流冠军",
     description: "公司能自我造血，让只准备了稀释笑话的 VC 陷入沉默。",
     priority: 90,
+    terminal: false,
+    settlementTitle: "不靠融资活着结算页",
     trigger: [
       { metric: "grossMargin", op: ">=", value: 55 },
       { metric: "runway", op: ">=", value: 24 },
+    ],
+  },
+  {
+    id: "zombie-unicorn",
+    name: "僵尸独角兽",
+    description: "估值站上十亿，现金只够几个月，办公室里每个人都在等下一轮奇迹。",
+    priority: 95,
+    terminal: false,
+    settlementTitle: "纸面独角兽续命结算页",
+    trigger: [
+      { metric: "valuation", op: ">=", value: 1_000_000_000 },
+      { metric: "runway", op: "<=", value: 4 },
+      { metric: "arr", op: "<", value: 30_000_000 },
     ],
   },
   {
@@ -103,9 +163,24 @@ export const endings = [
     name: "纸面富豪",
     description: "创始人在纸面上很富，在流动性、睡眠和周末上很穷。",
     priority: 100,
+    terminal: false,
+    settlementTitle: "朋友圈富豪结算页",
     trigger: [
       { metric: "valuation", op: ">=", value: 1_000_000_000 },
       { metric: "founderEquity", op: ">=", value: 30 },
+    ],
+  },
+  {
+    id: "board-doctor-note",
+    name: "董事会递来体检单",
+    description: "公司还在增长，但董事们开始把创始人的睡眠当成关键风险披露。",
+    priority: 110,
+    terminal: false,
+    settlementTitle: "董事会关怀 MVP 结算页",
+    trigger: [
+      { metric: "founderHealth", op: "<=", value: 20 },
+      { metric: "boardPressure", op: ">=", value: 55 },
+      { metric: "arr", op: ">=", value: 10_000_000 },
     ],
   },
   {
@@ -113,9 +188,36 @@ export const endings = [
     name: "生活方式公司",
     description: "它从未成为独角兽，但客户付钱，也没人再说闪电扩张。",
     priority: 120,
+    terminal: false,
+    settlementTitle: "体面小公司结算页",
     trigger: [
       { metric: "arr", op: ">=", value: 5_000_000 },
       { metric: "founderHealth", op: ">=", value: 70 },
+      { metric: "valuation", op: "<=", value: 200_000_000 },
     ],
+  },
+  {
+    id: "clean-architecture-cult",
+    name: "干净架构邪教",
+    description: "增长团队说你太慢，审计师、客户和凌晨三点的值班人说你终于正常。",
+    priority: 130,
+    terminal: false,
+    settlementTitle: "工程洁癖阶段结算页",
+    trigger: [
+      { metric: "techDebt", op: "<=", value: 10 },
+      { metric: "productQuality", op: ">=", value: 75 },
+      { metric: "grossMargin", op: ">=", value: 55 },
+      { metric: "runway", op: ">=", value: 12 },
+    ],
+  },
+  {
+    id: "fifteen-year-sunset",
+    name: "十五年终局",
+    description: "十五年过去，赛道、投资人和创始人的腰椎都换了一代。无论是否上市，董事会都要求把故事讲完。",
+    priority: 999,
+    terminal: true,
+    settlementTitle: "十五年生命周期结算页",
+    timeLimitYears: 15,
+    trigger: [],
   },
 ] satisfies Ending[];

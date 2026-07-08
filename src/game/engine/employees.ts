@@ -2,6 +2,7 @@ import { employeeRoles } from "../data/employeeRoles";
 import type { Employee, EmployeeRole, EmployeeRoleId, GameState } from "../types";
 import { applyMetricDelta, clampMetric } from "./clamp";
 import { createRng } from "./rng";
+import { syncRunway } from "./runway";
 
 export type RetentionMove = "raise-salary" | "refresh-options" | "promote" | "vacation";
 
@@ -62,6 +63,40 @@ function generatedEmployeeName(game: GameState, role: EmployeeRoleId, employeeIn
   }`;
 }
 
+function createEmployee(game: GameState, role: EmployeeRoleId, employeeIndex: number): Employee {
+  const roleData = roleFor(role);
+  const scarcity = startingScarcity(roleData);
+  return {
+    id: `employee-${employeeIndex}-${role}`,
+    name: generatedEmployeeName(game, role, employeeIndex),
+    role,
+    level: startingLevel(roleData),
+    ability: startingAbility(roleData),
+    salary: roleData.salaryBase,
+    options: roleData.id === "cfo" ? 2 : roleData.salaryBase >= 700_000 ? 0.8 : 0.4,
+    loyalty: startingLoyalty(game),
+    ambition: startingAmbition(roleData, game),
+    fatigue: clampPercent(10 + Math.max(0, scarcity - 60) / 5),
+    scarcity,
+    tags: tagsFor(roleData),
+  };
+}
+
+export function createInitialEmployees(game: GameState): Employee[] {
+  return [
+    {
+      ...createEmployee(game, "researcher", 1),
+      options: 1.2,
+      loyalty: clampPercent(startingLoyalty(game) + 8),
+    },
+    {
+      ...createEmployee(game, "engineer", 2),
+      options: 1,
+      loyalty: clampPercent(startingLoyalty(game) + 6),
+    },
+  ];
+}
+
 function nextLevel(level: Employee["level"]): Employee["level"] {
   const index = LEVEL_ORDER.indexOf(level);
   return LEVEL_ORDER[Math.min(LEVEL_ORDER.length - 1, index + 1)];
@@ -76,28 +111,15 @@ export function hireEmployee(game: GameState, role: EmployeeRoleId): GameState {
   const roleData = roleFor(role);
   const employeeIndex = game.employees.length + 1;
   const scarcity = startingScarcity(roleData);
-  const employee: Employee = {
-    id: `employee-${employeeIndex}-${role}`,
-    name: generatedEmployeeName(game, role, employeeIndex),
-    role,
-    level: startingLevel(roleData),
-    ability: startingAbility(roleData),
-    salary: roleData.salaryBase,
-    options: roleData.id === "cfo" ? 2 : roleData.salaryBase >= 700_000 ? 0.8 : 0.4,
-    loyalty: startingLoyalty(game),
-    ambition: startingAmbition(roleData, game),
-    fatigue: clampPercent(10 + Math.max(0, scarcity - 60) / 5),
-    scarcity,
-    tags: tagsFor(roleData),
-  };
+  const employee = createEmployee(game, role, employeeIndex);
   const hiringCost = Math.round(roleData.salaryBase * 0.4 + scarcity * 1_000);
 
-  return {
+  return syncRunway({
     ...game,
     metrics: applyMetricDelta(game.metrics, "cash", -hiringCost),
     employees: [...game.employees, employee],
     log: [...game.log, `招聘 ${employee.name}（${roleData.name}），前置成本 ${Math.round(hiringCost / 10_000)} 万。`],
-  };
+  });
 }
 
 export function calculateDepartureRisk(game: GameState, employee: Employee): number {
@@ -179,10 +201,10 @@ export function retainEmployee(game: GameState, employeeId: string, move: Retent
     };
   });
 
-  return {
+  return syncRunway({
     ...game,
     metrics: applyMetricDelta(game.metrics, "cash", -cost),
     employees,
-    log: [...game.log, `Retention move ${move} applied to ${target.name}; cost ${cost}.`],
-  };
+    log: game.log,
+  });
 }

@@ -257,7 +257,7 @@ function competitorScore(game: GameState, competitor: Competitor, categoryId: Le
     currentPhase * competitor.trend * 0.18 +
     (game.metrics.marketHeat - 55) * competitor.heatSensitivity +
     (game.metrics.globalReadiness - 10) * competitor.globalSensitivity +
-    relation * 0.05;
+    relation * 0.45;
   return Math.round(score);
 }
 
@@ -329,7 +329,7 @@ export function getLeaderboard(game: GameState, categoryId: LeaderboardCategoryI
   const score = playerScore(game, categoryId);
   const playerRow: Omit<LeaderboardRow, "rank"> = {
     id: "player" as const,
-    name: game.founder.name,
+    name: game.companyName,
     focus: "玩家公司",
     score,
     delta: game.metrics.arr > 0 ? Math.max(0, Math.round(revenueScore(game.metrics.arr) / 3)) : 0,
@@ -349,9 +349,9 @@ export function getLeaderboardCompanyDetail(game: GameState, id: FactionId | "pl
   if (id === "player") {
     return {
       id,
-      name: game.founder.name,
+      name: game.companyName,
       region: "中国 / 全球扩张中",
-      description: `${game.founder.name} 正在用 ARR、模型能力和全球化准备度争夺入榜资格。`,
+      description: `${game.companyName} 正在用 ARR、模型能力和全球化准备度争夺入榜资格。`,
       strengths: [`ARR ${Math.round(game.metrics.arr / 10_000)} 万`, `模型能力 ${Math.round(game.metrics.modelPower)}%`],
       weaknesses: [`合规风险 ${Math.round(game.metrics.complianceRisk)}%`, `董事会压力 ${Math.round(game.metrics.boardPressure)}%`],
       mood: game.metrics.runway <= 6 ? "现金焦虑" : "仍在推进",

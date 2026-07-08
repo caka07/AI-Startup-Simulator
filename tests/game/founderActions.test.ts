@@ -31,6 +31,8 @@ describe("founder actions", () => {
       "take-vacation",
       "public-thread",
       "therapy",
+      "delegate-ceo",
+      "medical-checkup",
     ]);
   });
 

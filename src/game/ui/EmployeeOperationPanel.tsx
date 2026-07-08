@@ -58,22 +58,38 @@ export function EmployeeOperationPanel({ game, assignments, onChange }: Employee
             const operation = employeeOperations.find((item) => item.id === assignment?.operationId);
             return (
               <div className="employee-operation-option" key={employee.id}>
-                <span>
+                <span className="employee-operation-person">
                   <strong>{employee.name}</strong>
                   <small>{ROLE_NAMES[employee.role]}</small>
                 </span>
-                <select
-                  aria-label={`${employee.name} 员工操作`}
-                  value={assignment?.operationId ?? ""}
-                  onChange={(event) => updateAssignment(employee.id, event.target.value as EmployeeOperationId | "")}
-                >
-                  <option value="">本季度不操作</option>
+                <div className="employee-operation-cards" aria-label={`${employee.name} 员工操作`}>
+                  <button
+                    aria-pressed={!assignment}
+                    className={!assignment ? "employee-operation-card selected" : "employee-operation-card"}
+                    onClick={() => updateAssignment(employee.id, "")}
+                    type="button"
+                  >
+                    <strong>平稳度过</strong>
+                    <small>不额外干预，维持本季度状态。</small>
+                  </button>
                   {employeeOperations.map((operation) => (
-                    <option key={operation.id} value={operation.id}>
-                      {operation.name}
-                    </option>
+                    <button
+                      aria-label={`${employee.name} ${operation.name}`}
+                      aria-pressed={assignment?.operationId === operation.id}
+                      className={
+                        assignment?.operationId === operation.id
+                          ? `employee-operation-card selected ${operation.risk}`
+                          : `employee-operation-card ${operation.risk}`
+                      }
+                      key={operation.id}
+                      onClick={() => updateAssignment(employee.id, operation.id)}
+                      type="button"
+                    >
+                      <strong>{operation.name}</strong>
+                      <small>{operation.description}</small>
+                    </button>
                   ))}
-                </select>
+                </div>
                 {operation ? (
                   <em className={`status-pill ${riskTone(operation.risk)}`}>
                     {riskLabel(operation.risk)}

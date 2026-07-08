@@ -1,6 +1,6 @@
 export const BALANCE = {
   startYear: 2026,
-  maxYears: 12,
+  maxYears: 15,
   founderAttributeBudget: 24,
   exchangeRateUsdCny: 7,
   runway: {

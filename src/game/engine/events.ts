@@ -1,4 +1,5 @@
 import { events } from "../data/events";
+import { choiceOutcome, eventTitle, factionChoiceEffect } from "../data/eventText";
 import type { Condition, GameEvent, GameState } from "../types";
 import { applyMetricDelta } from "./clamp";
 
@@ -10,6 +11,8 @@ const EVENT_HEAT_BONUS_HIGH = 0.1;
 const EVENT_HEAT_BONUS_MEDIUM = 0.06;
 const EVENT_BOARD_BONUS = 0.08;
 const EVENT_HEALTH_BONUS = 0.08;
+const EVENT_TECH_DEBT_BONUS_HIGH = 0.08;
+const EVENT_TECH_DEBT_BONUS_MEDIUM = 0.04;
 const EVENT_QUIET_BONUS = 0.08;
 const HASH_SEED = 0x811c9dc5;
 const HASH_MIX_A = 0x85ebca6b;
@@ -26,6 +29,7 @@ export function matchesCondition(game: GameState, condition: Condition): boolean
 }
 
 export function matchesAll(game: GameState, trigger: Condition[]): boolean {
+  if (trigger.length === 0) return false;
   return trigger.every((condition) => matchesCondition(game, condition));
 }
 
@@ -65,8 +69,17 @@ export function calculateEventChance(game: GameState): number {
         : 0;
   const boardBonus = game.metrics.boardPressure >= 50 ? EVENT_BOARD_BONUS : 0;
   const healthBonus = game.metrics.founderHealth <= 40 ? EVENT_HEALTH_BONUS : 0;
+  const techDebtBonus =
+    game.metrics.techDebt >= 70
+      ? EVENT_TECH_DEBT_BONUS_HIGH
+      : game.metrics.techDebt >= 45
+        ? EVENT_TECH_DEBT_BONUS_MEDIUM
+        : 0;
   const quietBonus = game.resolvedEventIds.length === 0 ? EVENT_QUIET_BONUS : 0;
-  return Math.min(EVENT_CHANCE_CAP, EVENT_BASE_CHANCE + riskBonus + heatBonus + boardBonus + healthBonus + quietBonus);
+  return Math.min(
+    EVENT_CHANCE_CAP,
+    EVENT_BASE_CHANCE + riskBonus + heatBonus + boardBonus + healthBonus + techDebtBonus + quietBonus,
+  );
 }
 
 export function shouldTriggerEvent(game: GameState): boolean {
@@ -91,13 +104,21 @@ export function resolveEventChoice(game: GameState, event: GameEvent, choiceId: 
     (nextMetrics, effect) => applyMetricDelta(nextMetrics, effect.metric, effect.delta),
     game.metrics,
   );
+  const factionEffect = factionChoiceEffect(choice.id);
+  const factionRelations = factionEffect
+    ? {
+        ...game.factionRelations,
+        [factionEffect.faction]: game.factionRelations[factionEffect.faction] + factionEffect.delta,
+      }
+    : game.factionRelations;
 
   return {
     ...game,
     metrics,
+    factionRelations,
     resolvedEventIds: game.resolvedEventIds.includes(event.id)
       ? game.resolvedEventIds
       : [...game.resolvedEventIds, event.id],
-    log: [...game.log, `${event.title}：${choice.log}`],
+    log: [...game.log, `${eventTitle(event)}：${choiceOutcome(choice)}`],
   };
 }

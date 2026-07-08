@@ -13,6 +13,7 @@ export const events = [
         effects: [
           { metric: "pmf", delta: 4 },
           { metric: "boardPressure", delta: -2 },
+          { metric: "marketHeat", delta: -2 },
         ],
         log: "The moat answer shifts from model mysticism to renewal pain.",
       },
@@ -69,6 +70,7 @@ export const events = [
         effects: [
           { metric: "productQuality", delta: 5 },
           { metric: "pmf", delta: 3 },
+          { metric: "cash", delta: -250_000 },
         ],
         log: "The team sells outcomes while Twitter argues benchmarks.",
       },
@@ -210,7 +212,7 @@ export const events = [
         label: "Push direct sales",
         effects: [
           { metric: "pmf", delta: 3 },
-          { metric: "runway", delta: -1 },
+          { metric: "cash", delta: -250_000 },
         ],
         log: "The company keeps margin and loses the shortcut.",
       },
@@ -314,7 +316,7 @@ export const events = [
         id: "stay-remote",
         label: "Stay remote",
         effects: [
-          { metric: "runway", delta: 1 },
+          { metric: "cash", delta: 250_000 },
           { metric: "globalReadiness", delta: -2 },
         ],
         log: "The budget survives; the overseas story remains theoretical.",
@@ -342,7 +344,7 @@ export const events = [
         label: "Skip the EU for now",
         effects: [
           { metric: "arr", delta: -500_000 },
-          { metric: "runway", delta: 1 },
+          { metric: "cash", delta: 250_000 },
         ],
         log: "Europe is postponed until the lawyers are less expensive.",
       },
@@ -465,6 +467,7 @@ export const events = [
         effects: [
           { metric: "reputation", delta: 2 },
           { metric: "productQuality", delta: 4 },
+          { metric: "marketHeat", delta: -2 },
         ],
         log: "The postmortem earns more trust than the demo would have.",
       },
@@ -472,6 +475,7 @@ export const events = [
         id: "blame-wifi",
         label: "Blame venue Wi-Fi",
         effects: [
+          { metric: "marketHeat", delta: 2 },
           { metric: "reputation", delta: -5 },
           { metric: "boardPressure", delta: 3 },
         ],
@@ -531,6 +535,7 @@ export const events = [
         effects: [
           { metric: "grossMargin", delta: 3 },
           { metric: "arr", delta: 400_000 },
+          { metric: "marketHeat", delta: -1 },
         ],
         log: "The deal is smaller, cleaner, and less likely to explode.",
       },
@@ -548,6 +553,7 @@ export const events = [
         effects: [
           { metric: "cash", delta: 600_000 },
           { metric: "computeSupply", delta: 4 },
+          { metric: "boardPressure", delta: 2 },
         ],
         log: "The vendor discounts the present and owns a piece of the future.",
       },
@@ -581,6 +587,7 @@ export const events = [
         id: "delay-response",
         label: "Delay the response",
         effects: [
+          { metric: "cash", delta: 150_000 },
           { metric: "complianceRisk", delta: 8 },
           { metric: "reputation", delta: -3 },
         ],
@@ -626,6 +633,7 @@ export const events = [
         effects: [
           { metric: "reputation", delta: 5 },
           { metric: "complianceRisk", delta: -2 },
+          { metric: "modelPower", delta: -1 },
         ],
         log: "Transparency steals oxygen from the rumor cycle.",
       },
@@ -661,6 +669,7 @@ export const events = [
         effects: [
           { metric: "grossMargin", delta: 4 },
           { metric: "complianceRisk", delta: -3 },
+          { metric: "marketHeat", delta: -2 },
         ],
         log: "The company competes on trust instead of a richer rival's price list.",
       },
@@ -677,7 +686,7 @@ export const events = [
         label: "Mentor juniors properly",
         effects: [
           { metric: "morale", delta: 4 },
-          { metric: "runway", delta: -1 },
+          { metric: "cash", delta: -250_000 },
         ],
         log: "The team gets talent, plus enough onboarding docs to frighten seniors.",
       },
@@ -702,7 +711,8 @@ export const events = [
         id: "freeze-hiring",
         label: "Freeze hiring",
         effects: [
-          { metric: "runway", delta: 3 },
+          { metric: "cash", delta: 750_000 },
+          { metric: "computeCost", delta: -3 },
           { metric: "morale", delta: -4 },
         ],
         log: "Runway extends as every open role becomes a rumor.",
@@ -739,7 +749,7 @@ export const events = [
         id: "walk-away",
         label: "Walk away",
         effects: [
-          { metric: "runway", delta: 1 },
+          { metric: "cash", delta: 250_000 },
           { metric: "reputation", delta: -2 },
         ],
         log: "The team preserves sanity and loses a logo slide.",
@@ -761,6 +771,7 @@ export const events = [
         effects: [
           { metric: "mrr", delta: 100_000 },
           { metric: "reputation", delta: 5 },
+          { metric: "founderHealth", delta: -3 },
         ],
         log: "The hot takes become leads before becoming liabilities.",
       },
@@ -839,6 +850,7 @@ export const events = [
         effects: [
           { metric: "cash", delta: 500_000 },
           { metric: "complianceRisk", delta: -2 },
+          { metric: "techDebt", delta: 2 },
         ],
         log: "The grant is real, and so is the reporting template.",
       },
@@ -952,6 +964,7 @@ export const events = [
         effects: [
           { metric: "productQuality", delta: 5 },
           { metric: "complianceRisk", delta: -4 },
+          { metric: "modelPower", delta: -2 },
         ],
         log: "The agent becomes less magical and much less lawsuit-shaped.",
       },
@@ -1031,6 +1044,7 @@ export const events = [
         effects: [
           { metric: "complianceRisk", delta: -8 },
           { metric: "productQuality", delta: 2 },
+          { metric: "cash", delta: -250_000 },
         ],
         log: "The findings are awkward and useful, the best kind of awkward.",
       },
@@ -1066,6 +1080,7 @@ export const events = [
         effects: [
           { metric: "reputation", delta: 3 },
           { metric: "arr", delta: 300_000 },
+          { metric: "grossMargin", delta: -2 },
         ],
         log: "Trust is sold as uptime instead of source code access.",
       },
@@ -1238,7 +1253,7 @@ export const events = [
         effects: [
           { metric: "complianceRisk", delta: -7 },
           { metric: "arr", delta: 800_000 },
-          { metric: "runway", delta: -1 },
+          { metric: "cash", delta: -250_000 },
         ],
         log: "The checklist becomes shippable work and a signed expansion.",
       },
@@ -1279,6 +1294,72 @@ export const events = [
           { metric: "reputation", delta: -2 },
         ],
         log: "The calendar stays full while everyone learns to read eye bags.",
+      },
+    ],
+  },
+  {
+    id: "technical-debt-outage",
+    title: "Technical Debt Outage",
+    category: "tech",
+    trigger: [
+      { metric: "techDebt", op: ">=", value: 60 },
+      { metric: "arr", op: ">=", value: 500_000 },
+    ],
+    choices: [
+      {
+        id: "freeze-roadmap-refactor",
+        label: "Freeze roadmap and refactor",
+        effects: [
+          { metric: "techDebt", delta: -10 },
+          { metric: "productQuality", delta: 3 },
+          { metric: "arr", delta: -400_000 },
+          { metric: "cash", delta: -300_000 },
+        ],
+        log: "The outage becomes a refactor budget after customers stop accepting apologies as uptime.",
+      },
+      {
+        id: "patch-and-pray",
+        label: "Patch and pray",
+        effects: [
+          { metric: "arr", delta: 500_000 },
+          { metric: "techDebt", delta: 8 },
+          { metric: "reputation", delta: -4 },
+          { metric: "founderHealth", delta: -3 },
+        ],
+        log: "The patch ships before the root cause doc, and everyone knows which one will last longer.",
+      },
+    ],
+  },
+  {
+    id: "renewal-churn-from-reliability",
+    title: "Renewal Churn From Reliability",
+    category: "customer",
+    trigger: [
+      { metric: "techDebt", op: ">=", value: 55 },
+      { metric: "mrr", op: ">=", value: 200_000 },
+    ],
+    choices: [
+      {
+        id: "refund-and-rebuild",
+        label: "Refund and rebuild",
+        effects: [
+          { metric: "mrr", delta: -80_000 },
+          { metric: "techDebt", delta: -5 },
+          { metric: "reputation", delta: 2 },
+          { metric: "cash", delta: -200_000 },
+        ],
+        log: "The refund hurts this month and saves the account from becoming a public postmortem.",
+      },
+      {
+        id: "deny-instability",
+        label: "Deny instability",
+        effects: [
+          { metric: "cash", delta: 150_000 },
+          { metric: "mrr", delta: -120_000 },
+          { metric: "reputation", delta: -5 },
+          { metric: "complianceRisk", delta: 3 },
+        ],
+        log: "Finance books the quarter while customer success quietly updates the churn forecast.",
       },
     ],
   },

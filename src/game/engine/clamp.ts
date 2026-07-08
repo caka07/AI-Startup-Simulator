@@ -9,8 +9,17 @@ export function clampMetric(metric: MetricId, value: number): number {
 }
 
 export function applyMetricDelta(metrics: CompanyMetrics, metric: MetricId, delta: number): CompanyMetrics {
+  const nextValue = clampMetric(metric, metrics[metric] + delta);
+  if (metric === "cash" && delta < 0 && nextValue === 0) {
+    return {
+      ...metrics,
+      cash: 0,
+      runway: 0,
+    };
+  }
+
   return {
     ...metrics,
-    [metric]: clampMetric(metric, metrics[metric] + delta),
+    [metric]: nextValue,
   };
 }

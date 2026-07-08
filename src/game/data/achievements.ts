@@ -439,4 +439,28 @@ export const achievements = [
       { metric: "founderEquity", op: ">=", value: 70 },
     ],
   },
+  {
+    id: "debt-free-launchpad",
+    name: "债务清洁发射台",
+    description: "你把临时脚手架拆到足够少，产品终于不是靠祈祷上线。",
+    conditionText: "技术债小于等于 8，且产品质量大于等于 60",
+    tier: "稀有",
+    trigger: [
+      { metric: "techDebt", op: "<=", value: 8 },
+      { metric: "productQuality", op: ">=", value: 60 },
+    ],
+  },
+  {
+    id: "mrr-diet",
+    name: "MRR 减脂",
+    description: "你主动放弃坏收入，毛利和 PMF 终于不像互相仇视。",
+    conditionText: "???",
+    tier: "隐藏",
+    hiddenCondition: true,
+    trigger: [
+      { metric: "grossMargin", op: ">=", value: 60 },
+      { metric: "pmf", op: ">=", value: 60 },
+      { metric: "mrr", op: "<", value: 500_000 },
+    ],
+  },
 ] satisfies Achievement[];

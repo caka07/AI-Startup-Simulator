@@ -5,7 +5,7 @@ import { calculateDepartureRisk, hireEmployee, retainEmployee } from "../../src/
 import type { EmployeeRoleId } from "../../src/game/types";
 
 function game() {
-  return createNewGame({
+  const base = createNewGame({
     seed: 13,
     founderName: "周见",
     backgroundId: "open-source-maintainer",
@@ -21,6 +21,7 @@ function game() {
       luck: 3,
     },
   });
+  return { ...base, employees: [] };
 }
 
 function salaryBase(roleId: EmployeeRoleId) {

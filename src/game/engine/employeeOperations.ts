@@ -1,6 +1,7 @@
 import type { Employee, EmployeeOperationId, GameState, MetricEffect } from "../types";
 import { applyMetricDelta, clampMetric } from "./clamp";
 import { calculateDepartureRisk, retainEmployee } from "./employees";
+import { syncRunway } from "./runway";
 
 export interface EmployeeOperation {
   id: EmployeeOperationId;
@@ -125,7 +126,6 @@ function applyLegacyEmployeeOperationToTarget(
         },
         [
           { metric: "cash", delta: Math.round(target.salary * 0.35) },
-          { metric: "runway", delta: 1 },
           { metric: "morale", delta: -12 },
           { metric: "reputation", delta: -5 },
           { metric: "boardPressure", delta: 3 },
@@ -180,7 +180,6 @@ function applySelectedEmployeeOperationToTarget(
         { ...game, employees: game.employees.filter((employee) => employee.id !== target.id) },
         [
           { metric: "cash", delta: Math.round(target.salary * 0.35) },
-          { metric: "runway", delta: 1 },
           { metric: "morale", delta: -8 },
           { metric: "reputation", delta: -4 },
         ],
@@ -217,7 +216,7 @@ function targetForOperation(game: GameState, operationId: EmployeeOperationId): 
 
 export function applyEmployeeOperation(game: GameState, operationId: EmployeeOperationId): GameState {
   if (game.employees.length === 0) return game;
-  return applyLegacyEmployeeOperationToTarget(game, targetForOperation(game, operationId), operationId);
+  return syncRunway(applyLegacyEmployeeOperationToTarget(game, targetForOperation(game, operationId), operationId));
 }
 
 export function applyEmployeeOperationToEmployee(
@@ -227,5 +226,5 @@ export function applyEmployeeOperationToEmployee(
 ): GameState {
   const target = game.employees.find((employee) => employee.id === employeeId);
   if (!target) return game;
-  return applySelectedEmployeeOperationToTarget(game, target, operationId);
+  return syncRunway(applySelectedEmployeeOperationToTarget(game, target, operationId));
 }

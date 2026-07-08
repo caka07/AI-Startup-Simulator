@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../src/game/engine/createGame";
 import { applyEmployeeOperation, applyEmployeeOperationToEmployee } from "../../src/game/engine/employeeOperations";
 import { hireEmployee } from "../../src/game/engine/employees";
+import { deriveRunway } from "../../src/game/engine/runway";
 import { advanceGameTurn } from "../../src/game/engine/turn";
 
 function game() {
-  return createNewGame({
+  const base = createNewGame({
     seed: 20260702,
     founderName: "林序",
     backgroundId: "former-llm-researcher",
     trackId: "ai-coding",
     attributes: { tech: 5, sales: 2, fundraising: 2, management: 2, ethics: 4, stamina: 3, hype: 2, luck: 4 },
   });
+  return { ...base, employees: [] };
 }
 
 function createTurnGame() {
@@ -105,7 +107,8 @@ describe("employee operations", () => {
 
     expect(next.employees.map((employee) => employee.id)).not.toContain(target.id);
     expect(next.metrics.cash).toBe(hired.metrics.cash + Math.round(target.salary * 0.35));
-    expect(next.metrics.runway).toBe(hired.metrics.runway + 1);
+    expect(next.metrics.runway).toBe(deriveRunway(next.metrics, next.employees));
+    expect(next.metrics.runway).toBeGreaterThan(hired.metrics.runway);
     expect(next.metrics.morale).toBe(hired.metrics.morale - 8);
     expect(next.metrics.reputation).toBe(hired.metrics.reputation - 4);
     expect(next.metrics.boardPressure).toBe(hired.metrics.boardPressure);

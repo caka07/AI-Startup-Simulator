@@ -3,6 +3,7 @@ import { calculateActionPreview, findAction } from "../../src/game/engine/action
 import { createNewGame } from "../../src/game/engine/createGame";
 import { advanceQuarter } from "../../src/game/engine/advance";
 import { applyMetricDelta } from "../../src/game/engine/clamp";
+import { deriveRunway } from "../../src/game/engine/runway";
 import type { ActionId, GameState } from "../../src/game/types";
 
 const input = {
@@ -53,10 +54,14 @@ describe("advanceQuarter", () => {
 
     const next = advanceQuarter(game, ["build-product", "sell", "train-model"]);
     const expected = applyPreviewActions(game, ["build-product", "sell"]);
+    const expectedMetrics = {
+      ...expected.metrics,
+      runway: deriveRunway(expected.metrics, expected.employees),
+    };
 
     expect(game.metrics).toEqual(originalMetrics);
     expect(game.log).toEqual(originalLog);
-    expect(next.metrics).toEqual(expected.metrics);
+    expect(next.metrics).toEqual(expectedMetrics);
     expect(next.metrics.modelPower).toBe(originalMetrics.modelPower);
     expect(next.metrics.computeCost).toBe(originalMetrics.computeCost);
     expect(next.metrics.cash).toBe(originalMetrics.cash);

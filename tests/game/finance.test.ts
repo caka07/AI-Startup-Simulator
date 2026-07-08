@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createNewGame } from "../../src/game/engine/createGame";
 import { evaluateFundraising, executeFundraise } from "../../src/game/engine/finance";
+import { deriveRunway } from "../../src/game/engine/runway";
 
 function baseGame() {
   return createNewGame({
@@ -26,11 +27,11 @@ describe("finance", () => {
     const game = baseGame();
     const healthy = evaluateFundraising({
       ...game,
-      metrics: { ...game.metrics, runway: 12, arr: 12_000_000, pmf: 65 },
+      metrics: { ...game.metrics, cash: 3_000_000, runway: 99, arr: 12_000_000, pmf: 65 },
     });
     const pressured = evaluateFundraising({
       ...game,
-      metrics: { ...game.metrics, runway: 4, arr: 12_000_000, pmf: 65 },
+      metrics: { ...game.metrics, cash: 120_000, runway: 99, arr: 12_000_000, pmf: 65 },
     });
 
     expect(pressured.valuation).toBeLessThan(healthy.valuation);
@@ -63,10 +64,42 @@ describe("finance", () => {
     expect(next.metrics.boardPressure).toBeGreaterThan(game.metrics.boardPressure);
   });
 
+  it("uses the selected investor terms and logs the investor name", () => {
+    const game = {
+      ...baseGame(),
+      metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 12, marketHeat: 85 },
+    };
+
+    const friendly = executeFundraise(game, "kevin-founder");
+    const harsh = executeFundraise(game, "hard-term-capital");
+
+    expect(friendly.metrics.founderEquity).toBeGreaterThan(harsh.metrics.founderEquity);
+    expect(friendly.log.at(-1)).toContain("Kevin Founder");
+    expect(harsh.log.at(-1)).toContain("Hard Term Capital");
+    expect(harsh.metrics.boardPressure).toBeGreaterThan(friendly.metrics.boardPressure);
+  });
+
+  it("adds selected investor relationship to fundraising score", () => {
+    const game = {
+      ...baseGame(),
+      metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 45, marketHeat: 35, reputation: 25, complianceRisk: 30 },
+    };
+    const cold = evaluateFundraising(game, "kevin-founder");
+    const warm = evaluateFundraising(
+      {
+        ...game,
+        investorRelations: { ...game.investorRelations, "kevin-founder": 20 },
+      },
+      "kevin-founder",
+    );
+
+    expect(warm.score).toBeGreaterThan(cold.score);
+  });
+
   it("uses predatory terms when runway is below the death spiral threshold", () => {
     const evaluation = evaluateFundraising({
       ...baseGame(),
-      metrics: { ...baseGame().metrics, runway: 2, arr: 8_000_000, pmf: 55 },
+      metrics: { ...baseGame().metrics, cash: 80_000, runway: 99, arr: 8_000_000, pmf: 55 },
     });
 
     expect(evaluation.termStyle).toBe("predatory");
@@ -97,25 +130,29 @@ describe("finance", () => {
     expect(evaluation.valuation).toBe(10_000_000);
   });
 
-  it("raises cash and runway only for actual dilution when founder equity is low", () => {
+  it("raises cash and recalculates runway only for actual dilution when founder equity is low", () => {
     const game = {
       ...baseGame(),
-      metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 10, founderEquity: 5 },
+      metrics: { ...baseGame().metrics, arr: 0, pmf: 65, runway: 99, founderEquity: 5 },
     };
     const evaluation = evaluateFundraising(game);
-    const expectedRunwayIncrease = Math.round(12 * (5 / evaluation.dilution));
 
     const next = executeFundraise(game);
+    const fullRaise = executeFundraise({
+      ...game,
+      metrics: { ...game.metrics, founderEquity: 100 },
+    });
 
-    expect(evaluation.dilution).toBe(15);
+    expect(evaluation.dilution).toBe(5);
+    expect(evaluation.suggestedAmount).toBe(Math.round(evaluation.valuation * 0.05));
     expect(next.metrics.cash).toBe(game.metrics.cash + Math.round(evaluation.valuation * 0.05));
     expect(next.metrics.founderEquity).toBe(0);
-    expect(next.metrics.runway).toBe(game.metrics.runway + expectedRunwayIncrease);
-    expect(next.metrics.runway).toBeLessThan(game.metrics.runway + 12);
+    expect(next.metrics.runway).toBe(deriveRunway(next.metrics, next.employees));
+    expect(next.metrics.runway).toBeLessThan(fullRaise.metrics.runway);
     expect(next.log.at(-1)).toContain("稀释 5%");
   });
 
-  it("does not add cash or runway when founder equity is already zero", () => {
+  it("fails fundraising without board pressure when founder equity is already zero", () => {
     const game = {
       ...baseGame(),
       metrics: { ...baseGame().metrics, arr: 12_000_000, pmf: 65, runway: 10, founderEquity: 0 },
@@ -125,8 +162,9 @@ describe("finance", () => {
 
     expect(next.metrics.cash).toBe(game.metrics.cash);
     expect(next.metrics.founderEquity).toBe(0);
-    expect(next.metrics.runway).toBe(game.metrics.runway);
-    expect(next.log.at(-1)).toContain("稀释 0%");
+    expect(next.metrics.boardPressure).toBe(game.metrics.boardPressure);
+    expect(next.metrics.runway).toBe(deriveRunway(next.metrics, next.employees));
+    expect(next.log.at(-1)).toContain("融资失败");
   });
 
   it("appends a funding log and updates valuation and runway without mutating the original game", () => {
@@ -143,7 +181,7 @@ describe("finance", () => {
     expect(game.metrics).toEqual(originalMetrics);
     expect(game.log).toEqual(originalLog);
     expect(next.metrics.valuation).toBe(evaluation.valuation);
-    expect(next.metrics.runway).toBe(originalMetrics.runway + 12);
+    expect(next.metrics.runway).toBe(deriveRunway(next.metrics, next.employees));
     expect(next.log).toHaveLength(originalLog.length + 1);
     expect(next.log.at(-1)).toContain("完成融资");
   });

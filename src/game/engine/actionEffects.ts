@@ -1,6 +1,6 @@
 import { EMPLOYEE_ROLE_IDS, METRIC_IDS, PERCENT_METRICS } from "../constants";
 import { actions } from "../data/actions";
-import type { ActionId, ActionPreview, GameState, MetricEffect, PlayerAction } from "../types";
+import type { ActionId, ActionPreview, ActionPreviewOptions, EmployeeRoleId, GameState, MetricEffect, PlayerAction } from "../types";
 import { applyMetricDelta } from "./clamp";
 import { hireEmployee } from "./employees";
 import { executeFundraise } from "./finance";
@@ -28,10 +28,44 @@ const METRIC_LABELS: Record<MetricEffect["metric"], string> = {
   marketHeat: "市场热度",
 };
 
+const BAD_WHEN_HIGH = new Set<MetricEffect["metric"]>(["computeCost", "techDebt", "complianceRisk", "boardPressure"]);
+
 export function findAction(actionId: ActionId): PlayerAction {
   const action = actions.find((item) => item.id === actionId);
   if (!action) throw new Error(`Unknown action: ${actionId}`);
   return action;
+}
+
+const CATEGORY_ROLES: Record<PlayerAction["category"], EmployeeRoleId[]> = {
+  research: ["researcher", "engineer"],
+  product: ["engineer", "product-manager", "researcher"],
+  commercial: ["sales", "product-manager", "overseas-bd"],
+  finance: ["finance", "cfo", "sales"],
+  people: ["product-manager", "cfo", "finance"],
+  global: ["overseas-bd", "sales", "compliance"],
+  risk: ["compliance", "finance", "cfo", "engineer"],
+};
+
+function teamExecutionBonus(game: GameState, action: PlayerAction): number {
+  if (game.employees.length === 0) return -0.08;
+  const relevantRoles = new Set(CATEGORY_ROLES[action.category]);
+  let weightedScore = 0;
+  let totalWeight = 0;
+
+  for (const employee of game.employees) {
+    const relevance = relevantRoles.has(employee.role) ? 1 : 0.35;
+    const individualScore =
+      employee.ability * 0.45 +
+      employee.loyalty * 0.22 +
+      (100 - employee.fatigue) * 0.25 +
+      Math.min(8, employee.options * 2);
+
+    weightedScore += individualScore * relevance;
+    totalWeight += relevance;
+  }
+
+  const averageScore = totalWeight > 0 ? weightedScore / totalWeight : 50;
+  return Math.max(-0.16, Math.min(0.18, ((averageScore - 60) / 100) * 0.4));
 }
 
 function efficiencyMultiplier(game: GameState, action: PlayerAction): number {
@@ -46,8 +80,35 @@ function efficiencyMultiplier(game: GameState, action: PlayerAction): number {
   }, 0);
   const moralePenalty = game.metrics.morale < 35 ? -0.12 : 0;
   const healthPenalty = game.metrics.founderHealth < 30 ? -0.1 : 0;
+  const techDebtPenalty =
+    action.category === "product" || action.category === "research"
+      ? Math.min(0.24, Math.max(0, game.metrics.techDebt - 35) * 0.004)
+      : 0;
+  const deliveryPenalty =
+    action.category === "commercial" || action.category === "global"
+      ? Math.min(0.14, Math.max(0, 45 - game.metrics.productQuality) * 0.003)
+      : 0;
+  const compliancePenalty =
+    action.category === "global" || action.category === "finance"
+      ? Math.min(0.16, Math.max(0, game.metrics.complianceRisk - 45) * 0.003)
+      : 0;
+  const teamBonus = teamExecutionBonus(game, action);
   return Number(
-    Math.max(0.55, Math.min(1.85, 1 + attributeBonus + metricBonus + moralePenalty + healthPenalty)).toFixed(2),
+    Math.max(
+      0.55,
+      Math.min(
+        1.85,
+        1 +
+          attributeBonus +
+          metricBonus +
+          teamBonus +
+          moralePenalty +
+          healthPenalty -
+          techDebtPenalty -
+          deliveryPenalty -
+          compliancePenalty,
+      ),
+    ).toFixed(2),
   );
 }
 
@@ -62,9 +123,13 @@ function normalizedMetricValue(metric: MetricEffect["metric"], value: number): n
 }
 
 function scaleEffect(effect: MetricEffect, multiplier: number): MetricEffect {
-  if (effect.delta <= 0 || effect.metric === "cash") return { ...effect };
+  if (effect.metric === "cash") return { ...effect };
+  const higherIsGood = !BAD_WHEN_HIGH.has(effect.metric);
+  const isBenefit = (effect.delta > 0) === higherIsGood;
+  if (!isBenefit) return { ...effect };
   const scaled = Math.round(effect.delta * multiplier);
-  return { ...effect, delta: PERCENT_METRICS.has(effect.metric) ? Math.min(100, scaled) : scaled };
+  if (!PERCENT_METRICS.has(effect.metric)) return { ...effect, delta: scaled };
+  return { ...effect, delta: Math.max(-100, Math.min(100, scaled)) };
 }
 
 function metricDeltaText(effect: MetricEffect): string {
@@ -109,7 +174,7 @@ export function applyActionEffects(game: GameState, actionId: ActionId): GameSta
   };
 }
 
-export function calculateActionPreview(game: GameState, actionId: ActionId): ActionPreview {
+export function calculateActionPreview(game: GameState, actionId: ActionId, options: ActionPreviewOptions = {}): ActionPreview {
   const basePreview = calculateBaseActionPreview(game, actionId);
 
   if (actionId === "fundraise") {
@@ -117,7 +182,7 @@ export function calculateActionPreview(game: GameState, actionId: ActionId): Act
       ...game,
       metrics: applyMetricDelta(game.metrics, "founderHealth", -findAction(actionId).healthCost),
     };
-    const afterFundraise = executeFundraise(withHealthCost);
+    const afterFundraise = executeFundraise(withHealthCost, options.investorId);
     const effects = effectsFromMetricDiff(game, afterFundraise);
     return {
       ...basePreview,

@@ -62,8 +62,8 @@ export const employeeRoles = [
     description: "解释为什么确认收入和银行现金在灵魂上不是一回事。",
     salaryBase: 450_000,
     strengths: [
-      { metric: "runway", delta: 1 },
       { metric: "grossMargin", delta: 3 },
+      { metric: "complianceRisk", delta: -2 },
     ],
     risks: ["spreadsheet vetoes", "morale drag"],
   },

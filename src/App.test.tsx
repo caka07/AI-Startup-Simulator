@@ -40,6 +40,7 @@ describe("App", () => {
       ...createNewGame({
         seed: 20260630,
         founderName: "存档创始人",
+        companyName: "存档智能",
         backgroundId: "serial-founder",
         trackId: "ai-agent",
         attributes: { tech: 5, sales: 6, fundraising: 7, management: 4, ethics: 3, stamina: 4, hype: 6, luck: 3 },
@@ -51,6 +52,10 @@ describe("App", () => {
   beforeEach(() => {
     installMemoryStorage();
   });
+
+  function makeFounderOverBudget() {
+    fireEvent.change(screen.getByLabelText("管理"), { target: { value: "9" } });
+  }
 
   function startGame() {
     render(<App />);
@@ -65,9 +70,16 @@ describe("App", () => {
   }
 
   function currentEventPanel() {
-    const trigger = screen.getByText(/触发信号/);
-    const panel = trigger.closest("section");
+    const eyebrow = screen.getByText(/突发事件/);
+    const panel = eyebrow.closest("section");
     if (!panel) throw new Error("Missing event panel");
+    return within(panel as HTMLElement);
+  }
+
+  function panelByHeading(name: string) {
+    const heading = screen.getByRole("heading", { name });
+    const panel = heading.closest("section");
+    if (!panel) throw new Error(`Missing panel for ${name}`);
     return within(panel as HTMLElement);
   }
 
@@ -82,7 +94,8 @@ describe("App", () => {
   it("starts a new game from the default founder setup", () => {
     render(<App />);
 
-    expect(screen.getByLabelText("创始人姓名")).toHaveValue("沈一");
+    expect(screen.getByLabelText("创始人姓名")).toHaveValue("nobody");
+    expect(screen.getByLabelText("公司名称")).toHaveValue("nobody");
     expect(
       within(screen.getByRole("region", { name: "创业身份" })).getByRole("button", { name: /大厂产品经理/ }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -90,11 +103,18 @@ describe("App", () => {
       within(screen.getByRole("region", { name: "创业赛道" })).getByRole("button", { name: /AI Agent/ }),
     ).toHaveAttribute("aria-pressed", "true");
 
+    expect(screen.getByText("属性总和 30")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "开始创业" })).toBeEnabled();
+    makeFounderOverBudget();
+    expect(screen.getByRole("button", { name: "开始创业" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("管理"), { target: { value: "6" } });
+    fireEvent.change(screen.getByLabelText("公司名称"), { target: { value: "火星账本" } });
     fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
 
     expect(screen.getByRole("heading", { name: "2026 Q1" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "本季度动作" })).toBeInTheDocument();
-    expect(loadGame()?.founder.name).toBe("沈一");
+    expect(loadGame()?.founder.name).toBe("nobody");
+    expect(loadGame()?.companyName).toBe("火星账本");
   });
 
   it("starts with attributes derived from identity track and preset", () => {
@@ -102,16 +122,16 @@ describe("App", () => {
 
     fireEvent.click(within(screen.getByRole("region", { name: "创业身份" })).getByRole("button", { name: /海外博士/ }));
     fireEvent.click(within(screen.getByRole("region", { name: "创业赛道" })).getByRole("button", { name: /金融 AI/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "属性预设" })).getByRole("button", { name: /全球化/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "属性预设" })).getByRole("button", { name: /技术型/ }));
     fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
 
     expect(loadGame()?.founder.attributes).toEqual(
       deriveFounderAttributes({
         seed: 20260702,
-        founderName: "沈一",
+        founderName: "nobody",
         backgroundId: "overseas-phd",
         trackId: "finance-ai",
-        presetId: "global",
+        presetId: "researcher",
       }),
     );
   });
@@ -120,11 +140,11 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(within(screen.getByRole("group", { name: "属性预设" })).getByRole("button", { name: /全球化/ }));
-    fireEvent.change(screen.getByLabelText("技术"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("管理"), { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "开始创业" }));
 
     const saved = loadGame();
-    expect(saved?.founder.attributes.tech).toBe(10);
+    expect(saved?.founder.attributes.management).toBe(4);
     expect(saved?.metrics.globalReadiness).toBe(16);
     expect(saved?.metrics.pmf).toBe(31);
   });
@@ -160,15 +180,38 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText(/从一间会议室打到全球榜单/)).toBeInTheDocument();
+    expect(screen.getByText(/上市不是结局，现金流才是氧气/)).toBeInTheDocument();
     expect(screen.queryByText(/属性点 .*\/24/)).not.toBeInTheDocument();
+    expect(screen.getByText(/属性总和小于等于 30/)).toBeInTheDocument();
+    expect(screen.queryByText(/后门|盯住|无双模式/)).not.toBeInTheDocument();
   });
 
-  it("shows action gains and paid extra action controls after game start", () => {
+  it("shows action trends and paid extra action controls after game start", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /开始创业/ }));
 
-    expect(screen.getAllByText(/模型能力 \+\d+/).length).toBeGreaterThan(0);
-    expect(screen.getByRole("checkbox", { name: /购买额外公司动作/ })).toBeInTheDocument();
+    const actionPanel = panelByHeading("本季度动作");
+    expect(actionPanel.getAllByText(/模型能力↑/).length).toBeGreaterThan(0);
+    expect(actionPanel.queryByText(/模型能力 \+\d+/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /增加额外动作/ })).toBeInTheDocument();
+    expect(screen.getByText(/创始人动作会在公司动作后结算/)).toBeInTheDocument();
+    expect(actionPanel.getByRole("button", { name: /强制休假/ })).toHaveAttribute("aria-pressed", "false");
+    expect(actionPanel.getAllByText(/创始人健康↑/).length).toBeGreaterThan(0);
+    expect(actionPanel.queryByText(/创始人健康 \+12/)).not.toBeInTheDocument();
+    expect(actionPanel.getByRole("button", { name: /平稳度过/ })).toBeInTheDocument();
+    expect(actionPanel.queryByRole("combobox", { name: "创始人本季度动作" })).not.toBeInTheDocument();
+  });
+
+  it("renders the active game as a mission bridge instead of a plain report grid", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /开始创业/ }));
+
+    expect(screen.getByRole("region", { name: "任务舰桥" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "操作甲板" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "情报舱" })).toBeInTheDocument();
+    expect(screen.getByLabelText("任务态势")).toBeInTheDocument();
+    expect(screen.getByText("现金流氧气")).toBeInTheDocument();
+    expect(screen.getByText("健康心率")).toBeInTheDocument();
   });
 
   it("lets the founder choose a quarterly founder action", () => {
@@ -179,7 +222,7 @@ describe("App", () => {
     });
     render(<App />);
 
-    fireEvent.change(screen.getByLabelText("创始人本季度动作"), { target: { value: "take-vacation" } });
+    fireEvent.click(screen.getByRole("button", { name: /强制休假/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /冲销售/ }));
     fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
@@ -194,7 +237,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /^招聘$/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /^研发产品$/ }));
     fireEvent.click(screen.getByRole("button", { name: /推进季度/ }));
-    if (screen.queryByText(/触发信号/)) {
+    if (screen.queryByText(/突发事件/)) {
       resolveCurrentEvent();
     }
 
@@ -237,12 +280,19 @@ describe("App", () => {
     startGame();
 
     fireEvent.click(screen.getByRole("checkbox", { name: /融资/ }));
+    const investorSelection = screen.getByRole("region", { name: "投资人选择" });
+    expect(within(investorSelection).getByText(/选择本轮领投/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "推进季度" })).toBeDisabled();
+    expect(within(investorSelection).queryByRole("button", { name: /自动匹配/ })).not.toBeInTheDocument();
+    fireEvent.click(within(investorSelection).getByRole("button", { name: /Kevin Founder/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
+    expect(screen.getByRole("button", { name: "推进季度" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
 
-    expect(metricCell("现金").getByText("¥450万")).toBeInTheDocument();
-    expect(metricCell("创始人股权").getByText("85%")).toBeInTheDocument();
+    expect(metricCell("现金").getByText("¥400万")).toBeInTheDocument();
+    expect(metricCell("创始人股权").getByText("90%")).toBeInTheDocument();
     expect(metricCell("创始人健康").getByText("77%")).toBeInTheDocument();
+    expect(loadGame()?.log.some((entry) => entry.includes("Kevin Founder"))).toBe(true);
     expect(screen.queryByRole("heading", { name: "投资人追问护城河" })).not.toBeInTheDocument();
   });
 
@@ -269,13 +319,15 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "员工季度操作" })).toBeInTheDocument();
     expect(screen.getAllByText("工程师").length).toBeGreaterThan(0);
     expect(screen.queryByText("engineer")).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /员工操作/ })).not.toBeInTheDocument();
+    expect(panelByHeading("员工季度操作").getAllByRole("button", { name: /平稳度过/ }).length).toBeGreaterThan(0);
     const submit = screen.getByRole("button", { name: "推进季度" });
 
     fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
     fireEvent.click(screen.getByRole("checkbox", { name: /冲销售/ }));
     expect(submit).toBeEnabled();
 
-    fireEvent.change(screen.getByLabelText(/员工操作/), { target: { value: "raise-salary" } });
+    fireEvent.click(screen.getAllByRole("button", { name: /加薪留人/ })[0]);
     expect(submit).toBeEnabled();
 
     fireEvent.click(submit);
@@ -287,7 +339,9 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(screen.getByText("常规条款")).toBeInTheDocument();
+    expect(screen.getAllByText("常规条款").length).toBeGreaterThan(0);
+    expect(screen.getByText("Kevin Founder")).toBeInTheDocument();
+    expect(screen.getByText(/看重创始人健康/)).toBeInTheDocument();
     expect(screen.queryByText("normal")).not.toBeInTheDocument();
   });
 
@@ -299,9 +353,28 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "成就" }));
 
     expect(screen.getByRole("dialog", { name: "成就" })).toBeInTheDocument();
-    expect(screen.getAllByText("???").length).toBeGreaterThan(0);
-    expect(screen.queryByText("敲钟的人")).not.toBeInTheDocument();
-    expect(screen.getAllByText(/MRR/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/解锁条件：？？？/).length).toBeGreaterThan(0);
+    expect(screen.getByText("静默期邪教徒")).toBeInTheDocument();
+    expect(screen.getByText(/解锁条件：月度经常性收入高于 0/)).toBeInTheDocument();
+    expect(screen.queryByText(/>=|<=|===|>|</)).not.toBeInTheDocument();
+  });
+
+  it("uses custom metric tooltips and shows the company in the leaderboard", () => {
+    saveGame(createSavedGame({ companyName: "霜火智能" }));
+
+    render(<App />);
+
+    expect(screen.getByText("排行榜")).toBeInTheDocument();
+    expect(screen.queryByText("AI 公司排行榜")).not.toBeInTheDocument();
+    expect(screen.getAllByText("霜火智能").length).toBeGreaterThan(0);
+
+    const runwayLabel = screen.getByText("Runway");
+    expect(runwayLabel).toHaveAttribute("data-tooltip", expect.stringContaining("公司现金还能支撑"));
+    expect(runwayLabel).not.toHaveAttribute("title");
+    expect(screen.getByRole("button", { name: /健康建议/ })).toHaveAttribute(
+      "data-tooltip",
+      expect.stringContaining("强制休假"),
+    );
   });
 
   it("loads a saved active game and can reset it during play", () => {
@@ -330,12 +403,55 @@ describe("App", () => {
     expect(loadGame()).toBeNull();
   });
 
+  it("recalculates runway from cash when loading an old active save", () => {
+    saveGame(createSavedGame({ metrics: { ...createSavedGame().metrics, cash: 0, runway: 12 } }));
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "现金流断裂" })).toBeInTheDocument();
+    expect(loadGame()?.metrics.runway).toBe(0);
+    expect(loadGame()?.endingId).toBe("cashflow-break");
+  });
+
+  it("shows a milestone settlement page without stopping play", () => {
+    saveGame({
+      ...createSavedGame({
+        metrics: {
+          ...createSavedGame().metrics,
+          arr: 90_000_000,
+          grossMargin: 52,
+          complianceRisk: 25,
+          globalReadiness: 60,
+          founderHealth: 70,
+          valuation: 900_000_000,
+        },
+      }),
+      resolvedEventIds: getEligibleEvents(createSavedGame()).map((event) => event.id),
+    });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /研发产品/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /治理合规/ }));
+    fireEvent.click(screen.getByRole("button", { name: "推进季度" }));
+
+    expect(screen.getByRole("dialog", { name: /阶段结局/ })).toBeInTheDocument();
+    expect(screen.getByText(/港股 IPO MVP 结算页/)).toBeInTheDocument();
+    expect(loadGame()?.completedEndings).toContain("hk-ipo");
+    expect(loadGame()?.endingId).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "继续创业" }));
+    expect(screen.getByRole("heading", { name: "本季度动作" })).toBeInTheDocument();
+  });
+
   it("restores a pending event prompt from a saved game after reload", () => {
     saveGame(advanceGameTurn(createSavedGame({ seed: 6 }), ["sell", "build-product"]));
 
     render(<App />);
 
-    expect(screen.getByText(/触发信号/)).toBeInTheDocument();
+    expect(screen.getByText(/突发事件/)).toBeInTheDocument();
+    expect(screen.queryByText(/触发信号/)).not.toBeInTheDocument();
+    expect(currentEventPanel().getAllByText(/趋势：/).length).toBeGreaterThan(0);
+    expect(currentEventPanel().queryByText(/增加 \d|减少 \d/)).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "本季度动作" })).not.toBeInTheDocument();
   });
 

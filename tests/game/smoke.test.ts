@@ -53,13 +53,14 @@ function createSmokeGame() {
   return createNewGame({
     seed: 20260630,
     founderName: "压力测试创始人",
+    companyName: "压力测试公司",
     backgroundId: "serial-founder",
     trackId: "ai-agent",
     attributes: { tech: 5, sales: 6, fundraising: 7, management: 4, ethics: 3, stamina: 4, hype: 6, luck: 3 },
   });
 }
 
-describe("12-year smoke simulation", () => {
+describe("15-year smoke simulation", () => {
   it("can run a full game without invalid metrics or content errors", () => {
     const validation = validateContent();
     expect(validation.errors).toEqual([]);
@@ -74,7 +75,7 @@ describe("12-year smoke simulation", () => {
       ["govern-compliance", "expand-global"],
     ] as const;
 
-    for (let i = 0; i < 48 && !game.endingId; i += 1) {
+    for (let i = 0; i < 60 && !game.endingId; i += 1) {
       game = advanceGameTurn(game, [...policy[i % policy.length]]);
       for (const value of Object.values(game.metrics)) {
         expect(Number.isFinite(value)).toBe(true);
@@ -82,7 +83,7 @@ describe("12-year smoke simulation", () => {
       }
     }
 
-    expect(game.year).toBeLessThanOrEqual(2038);
+    expect(game.year).toBeLessThanOrEqual(2041);
   });
 });
 
@@ -143,6 +144,16 @@ describe("game persistence", () => {
     });
   });
 
+  it("normalizes valid saves that predate company naming", () => {
+    const legacyGame = createSmokeGame();
+    const { companyName: _companyName, ...legacySave } = legacyGame as GameState & {
+      companyName?: string;
+    };
+    storage.setItem(SAVE_KEY, JSON.stringify(legacySave));
+
+    expect(loadGame()).toEqual({ ...legacyGame, companyName: `${legacyGame.founder.name} AI` });
+  });
+
   it("removes saves with malformed faction relation values", () => {
     const game = createSmokeGame();
     storage.setItem(
@@ -152,6 +163,27 @@ describe("game persistence", () => {
 
     expect(loadGame()).toBeNull();
     expect(storage.getItem(SAVE_KEY)).toBeNull();
+  });
+
+  it("removes saves with unknown employee roles or levels", () => {
+    const game = createSmokeGame();
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        ...game,
+        employees: [{ ...game.employees[0], role: "attacker" }],
+      }),
+    );
+    expect(loadGame()).toBeNull();
+
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        ...game,
+        employees: [{ ...game.employees[0], level: "guru" }],
+      }),
+    );
+    expect(loadGame()).toBeNull();
   });
 
   it("clears saved game state", () => {

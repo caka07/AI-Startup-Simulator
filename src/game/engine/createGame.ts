@@ -2,7 +2,9 @@ import { BALANCE } from "../balance";
 import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS } from "../constants";
 import type { CompanyMetrics, GameState, MarketState, MetricEffect, NewGameInput } from "../types";
 import { applyMetricDelta } from "./clamp";
+import { createInitialEmployees } from "./employees";
 import { deriveFounderAttributes, deriveFounderMetricEffects } from "./founderStart";
+import { syncRunway } from "./runway";
 
 function createInitialMetrics(): CompanyMetrics {
   return {
@@ -53,9 +55,11 @@ function createProfiledMetrics(input: NewGameInput): CompanyMetrics {
 
 export function createNewGame(input: NewGameInput): GameState {
   const attributes = deriveFounderAttributes(input);
+  const companyName = input.companyName?.trim() || `${input.founderName} AI`;
 
-  return {
+  const game: GameState = {
     seed: input.seed,
+    companyName,
     year: BALANCE.startYear,
     quarter: 1,
     founder: {
@@ -70,8 +74,15 @@ export function createNewGame(input: NewGameInput): GameState {
     investorRelations: Object.fromEntries(INVESTOR_IDS.map((id) => [id, 0])) as GameState["investorRelations"],
     factionRelations: Object.fromEntries(FACTION_IDS.map((id) => [id, 0])) as GameState["factionRelations"],
     completedAchievements: [],
+    completedEndings: [],
     resolvedEventIds: [],
     endingId: null,
-    log: [`${input.founderName}创办了公司，投资人说这个方向“空间很大”。`],
+    log: [`${input.founderName}创办了${companyName}，投资人说这个方向“空间很大”。`],
   };
+
+  return syncRunway({
+    ...game,
+    employees: createInitialEmployees(game),
+    log: [...game.log, "两名早期员工加入创始团队：一个负责把模型变强，一个负责把服务跑稳。"],
+  });
 }

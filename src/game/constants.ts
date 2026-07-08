@@ -59,6 +59,9 @@ export const ACTION_IDS: ActionId[] = [
   "open-source-model",
   "security-audit",
   "poach-researcher",
+  "pay-tech-debt",
+  "prune-bad-customers",
+  "buyback-shares",
   "academic-fraud",
   "gray-data-deal",
   "inflate-arr",
@@ -103,3 +106,15 @@ export const INVESTOR_IDS: InvestorId[] = [
 ];
 
 export const EXTRA_COMPANY_ACTION_COST = 750_000;
+
+export function extraCompanyActionCost(employeeCount: number, extraIndex: number): number {
+  const growthFactor = Math.max(3, 10 - Math.floor(employeeCount / 3));
+  return Math.round(EXTRA_COMPANY_ACTION_COST * growthFactor ** extraIndex);
+}
+
+export function totalExtraCompanyActionCost(employeeCount: number, extraCount: number): number {
+  return Array.from({ length: extraCount }).reduce<number>(
+    (total, _item, index) => total + extraCompanyActionCost(employeeCount, index),
+    0,
+  );
+}

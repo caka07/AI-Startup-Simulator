@@ -7,6 +7,7 @@ describe("createNewGame", () => {
     const game = createNewGame({
       seed: 42,
       founderName: "沈一",
+      companyName: "星舰智能",
       backgroundId: "ex-bigtech-pm",
       trackId: "ai-agent",
       attributes: {
@@ -22,6 +23,7 @@ describe("createNewGame", () => {
     });
 
     expect(game.seed).toBe(42);
+    expect(game.companyName).toBe("星舰智能");
     expect(game.year).toBe(2026);
     expect(game.quarter).toBe(1);
     expect(game.founder).toEqual({
@@ -61,7 +63,9 @@ describe("createNewGame", () => {
       valuation: 10_000_000,
       marketHeat: 55,
     });
-    expect(game.employees).toEqual([]);
+    expect(game.employees).toHaveLength(2);
+    expect(game.employees.map((employee) => employee.role)).toEqual(["researcher", "engineer"]);
+    expect(game.employees.every((employee) => employee.name.length > 0)).toBe(true);
     expect(Object.keys(game.markets)).toEqual(MARKET_IDS);
     expect(game.markets.china).toEqual({
       id: "china",
@@ -100,7 +104,7 @@ describe("createNewGame", () => {
     expect(game.completedAchievements).toEqual([]);
     expect(game.resolvedEventIds).toEqual([]);
     expect(game.endingId).toBeNull();
-    expect(game.log[0]).toContain("沈一创办了公司");
+    expect(game.log[0]).toContain("沈一创办了星舰智能");
   });
 
   it("applies background and track effects to initial metrics", () => {

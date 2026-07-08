@@ -1,8 +1,11 @@
-import { FACTION_IDS, INVESTOR_IDS, MARKET_IDS, METRIC_IDS } from "../constants";
+import { EMPLOYEE_ROLE_IDS, FACTION_IDS, INVESTOR_IDS, MARKET_IDS, METRIC_IDS } from "../constants";
 import type { GameState } from "../types";
+import { applyEndingResolution, evaluateEndingResolution } from "./endings";
+import { syncRunway } from "./runway";
 
 const SAVE_KEY = "ai-startup-simulator-save-v1";
 const FOUNDER_ATTRIBUTE_IDS = ["tech", "sales", "fundraising", "management", "ethics", "stamina", "hype", "luck"];
+const EMPLOYEE_LEVELS = ["junior", "mid", "senior", "lead", "cxo"];
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
@@ -50,7 +53,9 @@ function hasValidEmployees(value: unknown): boolean {
       typeof employee.id === "string" &&
       typeof employee.name === "string" &&
       typeof employee.role === "string" &&
+      EMPLOYEE_ROLE_IDS.includes(employee.role as (typeof EMPLOYEE_ROLE_IDS)[number]) &&
       typeof employee.level === "string" &&
+      EMPLOYEE_LEVELS.includes(employee.level) &&
       Number.isFinite(employee.ability) &&
       Number.isFinite(employee.salary) &&
       Number.isFinite(employee.options) &&
@@ -83,8 +88,19 @@ function parseSavedGame(value: unknown): GameState | null {
   const normalizedResolvedEventIds =
     resolvedEventIds === undefined ? [] : isStringArray(resolvedEventIds) ? resolvedEventIds : null;
   if (!normalizedResolvedEventIds) return null;
+  const completedEndings = value.completedEndings;
+  const normalizedCompletedEndings =
+    completedEndings === undefined ? [] : isStringArray(completedEndings) ? completedEndings : null;
+  if (!normalizedCompletedEndings) return null;
   const normalizedFactionRelations = normalizeFactionRelations(value.factionRelations);
   if (!normalizedFactionRelations) return null;
+  const normalizedCompanyName =
+    typeof value.companyName === "string" && value.companyName.trim().length > 0
+      ? value.companyName
+      : isRecord(value.founder) && typeof value.founder.name === "string"
+        ? `${value.founder.name} AI`
+        : null;
+  if (!normalizedCompanyName) return null;
 
   if (
     !Number.isFinite(value.seed) ||
@@ -108,6 +124,8 @@ function parseSavedGame(value: unknown): GameState | null {
 
   return {
     ...(value as unknown as GameState),
+    companyName: normalizedCompanyName,
+    completedEndings: normalizedCompletedEndings,
     resolvedEventIds: normalizedResolvedEventIds,
     factionRelations: normalizedFactionRelations,
   };
@@ -144,7 +162,9 @@ export function loadGame(): GameState | null {
   try {
     const game = parseSavedGame(JSON.parse(raw));
     if (!game) removeSavedGame(storage);
-    return game;
+    if (!game) return null;
+    const synced = syncRunway(game);
+    return evaluateEndingResolution(synced).terminalEnding ? applyEndingResolution(synced) : synced;
   } catch {
     removeSavedGame(storage);
     return null;

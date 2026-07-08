@@ -1,4 +1,4 @@
-import { Activity, Banknote, CalendarDays, HeartPulse, Percent, TrendingUp } from "lucide-react";
+import { Activity, Banknote, CalendarDays, HeartPulse, Percent, TrendingUp, type LucideIcon } from "lucide-react";
 import type { GameState, MetricId } from "../types";
 
 interface DashboardProps {
@@ -11,6 +11,12 @@ interface MetricItem {
   tooltip?: string;
   value: string;
   inverse?: boolean;
+}
+
+interface AdvisorItem {
+  label: string;
+  tooltip: string;
+  icon: LucideIcon;
 }
 
 function formatMoney(value: number): string {
@@ -32,6 +38,31 @@ function metricTone(value: number, inverse = false): "success" | "warning" | "da
 }
 
 export function Dashboard({ game }: DashboardProps) {
+  const runwayTone: "success" | "warning" | "danger" | "neutral" =
+    game.metrics.runway >= 12 ? "success" : game.metrics.runway >= 6 ? "neutral" : game.metrics.runway >= 3 ? "warning" : "danger";
+  const bridgeSignals = [
+    {
+      label: "现金流氧气",
+      value: `${Math.round(game.metrics.runway)} 个月`,
+      tone: runwayTone,
+    },
+    {
+      label: "增长引擎",
+      value: formatMoney(game.metrics.arr),
+      tone: metricTone(Math.min(100, game.metrics.arr / 1_000_000)),
+    },
+    {
+      label: "健康心率",
+      value: formatPercent(game.metrics.founderHealth),
+      tone: metricTone(game.metrics.founderHealth),
+    },
+    {
+      label: "董事会压力",
+      value: formatPercent(game.metrics.boardPressure),
+      tone: metricTone(game.metrics.boardPressure, true),
+    },
+  ];
+
   const primaryMetrics: MetricItem[] = [
     { id: "cash", label: "现金", value: formatMoney(game.metrics.cash) },
     { id: "runway", label: "Runway", tooltip: "Runway：公司现金还能支撑的月份", value: `${Math.round(game.metrics.runway)} 个月` },
@@ -53,22 +84,64 @@ export function Dashboard({ game }: DashboardProps) {
     { id: "founderEquity", label: "创始人股权", value: formatPercent(game.metrics.founderEquity) },
   ];
 
+  const advisors: AdvisorItem[] = [
+    {
+      label: "现金建议",
+      tooltip: `现金建议：当前 Runway ${Math.round(game.metrics.runway)} 个月。低于 6 个月优先融资、削减成本或收预付款。`,
+      icon: Banknote,
+    },
+    {
+      label: "增长建议",
+      tooltip: `增长建议：当前 ARR ${formatMoney(game.metrics.arr)}。ARR 低时优先冲销售和研发产品，PMF 超过 55 后再加速扩张。`,
+      icon: TrendingUp,
+    },
+    {
+      label: "运营建议",
+      tooltip: `运营建议：技术债和合规风险会拖慢效率。技术债高时做深度工作，合规风险高时做治理合规。`,
+      icon: Activity,
+    },
+    {
+      label: "健康建议",
+      tooltip: `健康建议：创始人健康 ${Math.round(game.metrics.founderHealth)}%。低于 55 选强制休假或心理咨询，低于 40 选住院体检。`,
+      icon: HeartPulse,
+    },
+  ];
+
   return (
     <section className="dashboard" aria-label="公司仪表盘">
       <div className="dashboard-title">
         <div>
-          <p className="eyebrow">12 年生命周期 / {game.founder.name}</p>
+          <p className="eyebrow">15 年生命周期 / {game.companyName} / {game.founder.name}</p>
           <h1>
             <CalendarDays aria-hidden="true" size={22} />
             {game.year} Q{game.quarter}
           </h1>
         </div>
-        <div className="dashboard-icons" aria-hidden="true">
-          <Banknote size={20} />
-          <TrendingUp size={20} />
-          <Activity size={20} />
-          <HeartPulse size={20} />
+        <div className="dashboard-icons" aria-label="经营建议">
+          {advisors.map((advisor) => {
+            const Icon = advisor.icon;
+            return (
+              <button
+                aria-label={advisor.label}
+                className="dashboard-advisor"
+                data-tooltip={advisor.tooltip}
+                key={advisor.label}
+                type="button"
+              >
+                <Icon aria-hidden="true" size={20} />
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      <div className="bridge-status-strip" aria-label="任务态势">
+        {bridgeSignals.map((signal) => (
+          <div className={`bridge-signal ${signal.tone}`} key={signal.label}>
+            <span>{signal.label}</span>
+            <strong>{signal.value}</strong>
+          </div>
+        ))}
       </div>
 
       <div className="metric-grid primary-metrics">
@@ -76,7 +149,7 @@ export function Dashboard({ game }: DashboardProps) {
           <div className="metric-cell" key={metric.id}>
             <span
               className="metric-label"
-              title={metric.tooltip}
+              data-tooltip={metric.tooltip || undefined}
               tabIndex={metric.tooltip ? 0 : -1}
               aria-label={metric.tooltip ?? metric.label}
             >
@@ -92,7 +165,7 @@ export function Dashboard({ game }: DashboardProps) {
           <div className="metric-cell compact" key={metric.id}>
             <span
               className="metric-label"
-              title={metric.tooltip}
+              data-tooltip={metric.tooltip || undefined}
               tabIndex={metric.tooltip ? 0 : -1}
               aria-label={metric.tooltip ?? metric.label}
             >

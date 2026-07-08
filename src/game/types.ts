@@ -112,7 +112,9 @@ export type FounderActionId =
   | "customer-roadtrip"
   | "take-vacation"
   | "public-thread"
-  | "therapy";
+  | "therapy"
+  | "delegate-ceo"
+  | "medical-checkup";
 
 export type ActionId =
   | "build-product"
@@ -130,6 +132,9 @@ export type ActionId =
   | "open-source-model"
   | "security-audit"
   | "poach-researcher"
+  | "pay-tech-debt"
+  | "prune-bad-customers"
+  | "buyback-shares"
   | "academic-fraud"
   | "gray-data-deal"
   | "inflate-arr";
@@ -179,6 +184,7 @@ export interface MarketState {
 
 export interface GameState {
   seed: number;
+  companyName: string;
   year: number;
   quarter: Quarter;
   founder: FounderProfile;
@@ -188,6 +194,7 @@ export interface GameState {
   investorRelations: Record<InvestorId, number>;
   factionRelations: Record<FactionId, number>;
   completedAchievements: AchievementId[];
+  completedEndings: EndingId[];
   resolvedEventIds: EventId[];
   endingId: EndingId | null;
   log: string[];
@@ -196,6 +203,7 @@ export interface GameState {
 export interface NewGameInput {
   seed: number;
   founderName: string;
+  companyName?: string;
   backgroundId: BackgroundId;
   trackId: TrackId;
   presetId?: AttributePresetId;
@@ -264,7 +272,9 @@ export interface EmployeeOperationAssignment {
 export interface TurnSubmission {
   companyActions: ActionId[];
   extraCompanyAction?: ActionId | null;
+  extraCompanyActions?: ActionId[];
   founderAction?: FounderActionId | null;
+  investorId?: InvestorId | null;
   employeeOperations?: EmployeeOperationAssignment[];
 }
 
@@ -273,6 +283,10 @@ export interface ActionPreview {
   efficiencyMultiplier: number;
   effects: MetricEffect[];
   summary: string[];
+}
+
+export interface ActionPreviewOptions {
+  investorId?: InvestorId | null;
 }
 
 export interface GameEventChoice {
@@ -305,5 +319,8 @@ export interface Ending {
   name: string;
   description: string;
   priority: number;
+  terminal: boolean;
+  settlementTitle?: string;
+  timeLimitYears?: number;
   trigger: Condition[];
 }

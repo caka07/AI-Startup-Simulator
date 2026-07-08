@@ -61,7 +61,7 @@ describe("events", () => {
     expect(getEligibleEvents(insulated).map((event) => event.id)).not.toContain("deepduck-open-source-shock");
   });
 
-  it("event choices apply metric effects through clamps and append event logs without mutating the original game", () => {
+  it("event choices apply metric effects, localized logs, and faction relation changes without mutating the original game", () => {
     const game = gameWithMetrics({ modelPower: 45, marketHeat: 70, pmf: 99, productQuality: 99 });
     const event = getEligibleEvents(game).find((item) => item.id === "deepduck-open-source-shock");
     if (!event) throw new Error("Missing DeepDuck event fixture");
@@ -71,10 +71,14 @@ describe("events", () => {
     expect(next).not.toBe(game);
     expect(next.metrics.pmf).toBe(100);
     expect(next.metrics.productQuality).toBe(100);
-    expect(next.log.at(-1)).toContain(event.title);
+    expect(next.factionRelations.deepduck).toBeGreaterThan(game.factionRelations.deepduck);
+    expect(next.log.at(-1)).toContain("DeepDuck 发布廉价模型");
+    expect(next.log.at(-1)).toContain("工作流价值");
+    expect(next.log.at(-1)).not.toContain("Releases");
+    expect(next.log.at(-1)).not.toContain("Twitter argues benchmarks");
     expect(game.metrics.pmf).toBe(99);
     expect(game.metrics.productQuality).toBe(99);
-    expect(game.log).toHaveLength(1);
+    expect(game.log).toHaveLength(2);
   });
 
   it("event choices do not allow non-percent metrics to drop below zero", () => {

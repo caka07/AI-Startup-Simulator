@@ -89,6 +89,8 @@ const REQUIRED_EVENT_IDS = [
   "enterprise-security-review",
   "founder-burnout-rumor",
   "giant-launches-free-agent",
+  "technical-debt-outage",
+  "renewal-churn-from-reliability",
 ];
 
 const REQUIRED_ACHIEVEMENT_IDS = [
@@ -137,6 +139,8 @@ const REQUIRED_ACHIEVEMENT_IDS = [
   "no-sleep-demo-day",
   "paper-unicorn",
   "cashflow-heretic",
+  "debt-free-launchpad",
+  "mrr-diet",
 ];
 
 const REQUIRED_ENDING_IDS = [
@@ -151,7 +155,13 @@ const REQUIRED_ENDING_IDS = [
   "cashflow-champion",
   "paper-billionaire",
   "professional-ceo-replaced-founder",
+  "fifteen-year-sunset",
+  "nasdaq-roadshow-mvp",
+  "zombie-unicorn",
+  "board-doctor-note",
   "lifestyle-company",
+  "technical-debt-meltdown",
+  "clean-architecture-cult",
 ];
 
 const ALLOWED_CONDITION_OPERATORS = [">=", ">", "<=", "<", "==="];
@@ -274,6 +284,18 @@ function validateActionMetadata(action: PlayerAction, errors: string[]) {
 
 function validateTriggeredContent(owner: string, items: Array<GameEvent | Achievement | Ending>, errors: string[]) {
   for (const item of items) {
+    const isTimeLimitEnding = owner === "endings" && "timeLimitYears" in item && item.timeLimitYears !== undefined;
+    if (isTimeLimitEnding) {
+      if (typeof item.timeLimitYears !== "number" || !Number.isFinite(item.timeLimitYears) || item.timeLimitYears <= 0) {
+        errors.push(`${owner}/${item.id} has invalid timeLimitYears`);
+      }
+      if (!Array.isArray(item.trigger)) {
+        errors.push(`${owner}/${item.id} has missing or invalid trigger`);
+      } else if (item.trigger.length > 0) {
+        errors.push(`${owner}/${item.id} time limit ending should not also define metric triggers`);
+      }
+      continue;
+    }
     if (!Array.isArray(item.trigger)) {
       errors.push(`${owner}/${item.id} has missing or invalid trigger`);
       continue;
@@ -430,6 +452,7 @@ export function validateContentTables(tables: ContentTables): ValidationResult {
   for (let index = 0; index < tables.endings.length; index += 1) {
     const ending = tables.endings[index];
     if (!Number.isFinite(ending.priority)) errors.push(`endings/${ending.id} has non-finite priority`);
+    if (typeof ending.terminal !== "boolean") errors.push(`endings/${ending.id} has invalid terminal flag`);
     if (index > 0 && ending.priority < tables.endings[index - 1].priority) {
       errors.push(`endings/${ending.id} priority is out of order`);
     }

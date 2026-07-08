@@ -1,5 +1,6 @@
 import type { ActionId, GameState, Quarter } from "../types";
 import { applyAction } from "./actions";
+import { syncRunway } from "./runway";
 
 function nextQuarter(year: number, quarter: Quarter): { year: number; quarter: Quarter } {
   if (quarter === 4) return { year: year + 1, quarter: 1 };
@@ -27,5 +28,5 @@ export function advanceQuarter(game: GameState, actions: ActionId[]): GameState 
     next = applyAction(next, action);
   }
 
-  return advanceQuarterClock(next);
+  return advanceQuarterClock(syncRunway(next));
 }
