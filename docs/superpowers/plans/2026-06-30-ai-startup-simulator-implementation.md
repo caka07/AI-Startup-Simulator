@@ -24,7 +24,7 @@ The implementation must optimize for self-consistency:
 
 ## File Structure
 
-Create this structure inside `/Users/bytedance/Downloads/ai-startup-simulator`:
+Create this structure inside `${PROJECT_ROOT}`:
 
 ```text
 ai-startup-simulator/
